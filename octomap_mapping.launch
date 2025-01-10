@@ -1,0 +1,21 @@
+<launch><!-- mention the octomap launch commands-->
+
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+        <param name="resolution" value="0.20" />
+
+        <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+        <param name="frame_id" type="string" value="map" />
+
+        <!-- maximum range to integrate (speedup!) -->
+        <param name="sensor_model/max_range" value="15" />
+
+        <!-- data source to integrate (PointCloud2) -->
+        <remap from="/iris_D435i/realsense/depth_camera/depth/points" to="voxel_grid/output" />
+
+    </node>
+
+    <!-- 启动 rviz -->
+    <arg name="rviz_config" default="/home/jingye/CLionProjects/ar-obstacle-vis/src/ar-obstacle-vis/octomap.rviz"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)"/>
+
+</launch>
