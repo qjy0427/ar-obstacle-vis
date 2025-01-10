@@ -1,6 +1,4 @@
 #include <iostream>
-#include <octomap/octomap.h>
-#include <octomap/OcTree.h>
 #include <pcl/common/transforms.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -10,6 +8,8 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_broadcaster.h>
+
+#include "octomap/include/octomap/OcTree.h"
 
 
 std::mutex mutex_cloud, mutex_pose;
