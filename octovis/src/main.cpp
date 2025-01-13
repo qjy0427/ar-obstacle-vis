@@ -18,6 +18,7 @@
 std::mutex mutex_cloud, mutex_pose;
 sensor_msgs::PointCloud2 cloud;
 geometry_msgs::PoseStamped pose;
+std::shared_ptr<octomap::ViewerGui> gui;
 
 class PointCloudPoseSubscriber {
 public:
@@ -114,32 +115,16 @@ void updateOctomap(
 
     std::cout << "octree->size(): " << octree->size() << "\n";
 
-    if (octree->size() > 1e6) {
-        octree->prune();
-        octree->write("/home/jingye/Downloads/octomap.ot");
-        exit(0);
-    }
+    // if (octree->size() > 1e6) {
+    //     octree->prune();
+    //     octree->write("/home/jingye/Downloads/octomap.ot");
+    //     exit(0);
+    // }
 }
 
-int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
-
-    octomap::ViewerGui gui("", nullptr, 0);
-    gui.show();
-
-    app.exec();
-    std::cout << "passed block\n";
-
-    // int argc = 0;
-    // char** argv = nullptr;
-    ros::init(argc, argv, "ar_obstacle_vis_node");
-
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
-    PointCloudPoseSubscriber subscriber;
-
+void addPointClouds()
+{
     // 创建一个 OctoMap
-    std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.1)); // 分辨率 0.1 米
     ros::Rate loop_rate(100); // 设置循环频率为 10 Hz
 
     // tf publisher
@@ -149,10 +134,14 @@ int main(int argc, char *argv[]) {
                                    Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) *
                                    Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitX());
 
+
     double last_time = 0;
+    std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.5));
+        gui->addOctree(octree.get(), 0);
     while (ros::ok()) {
-        if (last_time >= cloud.header.stamp.toSec() ||
-            fabs(pose.header.stamp.toSec() - cloud.header.stamp.toSec()) >= 0.5/30)
+        if (last_time >= cloud.header.stamp.toSec()
+            || fabs(pose.header.stamp.toSec() - cloud.header.stamp.toSec()) >= 0.5/30
+            )
         {
             continue;
         }
@@ -170,12 +159,30 @@ int main(int argc, char *argv[]) {
 
         transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "depth_camera_base")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
+
         updateOctomap(cloud, pose, octree);
+        gui->showOcTree();
+
         last_time = cloud.header.stamp.toSec();
         mutex_pose.unlock();
         mutex_cloud.unlock();
-        loop_rate.sleep();
+        // loop_rate.sleep();
+        sleep(1);
     }
+}
 
-    return 0;
+int main(int argc, char *argv[]) {
+    ros::init(argc, argv, "ar_obstacle_vis_node");
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
+    PointCloudPoseSubscriber subscriber;
+
+    QApplication app(argc, argv);
+
+    gui = std::make_shared<octomap::ViewerGui>("", nullptr, 16);
+    gui->show();
+
+    std::thread t(addPointClouds);
+
+    return QApplication::exec();
 }

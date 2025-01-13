@@ -65,6 +65,11 @@ namespace octomap {
     // use this drawer id if loading files or none is specified in msg
     static const unsigned int DEFAULT_OCTREE_ID  = 0; 
 
+   void addOctree(AbstractOcTree* tree, int id, pose6d origin);
+   void addOctree(AbstractOcTree* tree, int id);
+   void showOcTree();
+
+
     public slots:
 
     void changeTreeDepth(int depth);
@@ -183,12 +188,9 @@ namespace octomap {
      * (Re-)generates OcTree from the internally stored ScanGraph
      */
     void generateOctree();
-    void showOcTree();
 
     void showInfo(QString string, bool newline=false);
 
-    void addOctree(AbstractOcTree* tree, int id, pose6d origin);
-    void addOctree(AbstractOcTree* tree, int id);
     bool getOctreeRecord(int id, OcTreeRecord*& otr);
 
     void saveCameraPosition(const char* filename) const;
