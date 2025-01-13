@@ -128,12 +128,22 @@ if (CMAKE_PROJECT_NAME STREQUAL "octomap-distribution")
   ADD_DEPENDENCIES(octovis-shared octomap)
 endif()
 
+find_package(PCL 1.2 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+
+find_package(catkin REQUIRED COMPONENTS roscpp tf)
+include_directories(${catkin_INCLUDE_DIRS})
 
 # Now add these generated files to the ADD_EXECUTABLE step
 # If this is NOT done, then the ui_*.h files will not be generated
 add_executable(octovis ${viewer_SRCS} ${viewer_UIS_H} ${viewer_MOC_SRCS} ${viewer_RES})
 
-target_link_libraries(octovis 
+# Make it visible outside
+#message(viewer_UIS_H: ${viewer_UIS_H})
+#set(viewer_UIS_H ${viewer_UIS_H} PARENT_SCOPE)
+
+target_link_libraries(octovis
+ ${PCL_LIBRARIES} ${catkin_LIBRARIES}
 #  ${QGLViewer_LIBRARIES}
   ${QT_LIBRARIES}
   ${OCTOMAP_LIBRARIES}
