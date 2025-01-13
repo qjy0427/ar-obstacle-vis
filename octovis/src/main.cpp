@@ -160,14 +160,20 @@ void addPointClouds()
         transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "depth_camera_base")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
 
+        // octree->clear();
         updateOctomap(cloud, pose, octree);
+        const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
+        gui->m_glwidget->camera()->setOrientation(
+            {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
+        gui->m_glwidget->camera()->setPosition({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z});
         gui->showOcTree();
 
         last_time = cloud.header.stamp.toSec();
         mutex_pose.unlock();
         mutex_cloud.unlock();
         // loop_rate.sleep();
-        sleep(1);
+        // sleep(1);
+        usleep(1e4);
     }
 }
 

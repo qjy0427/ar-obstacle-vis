@@ -69,6 +69,8 @@ namespace octomap {
    void addOctree(AbstractOcTree* tree, int id);
    void showOcTree();
 
+   ViewerWidget* m_glwidget;
+
 
     public slots:
 
@@ -206,7 +208,6 @@ namespace octomap {
     ScanGraph::iterator m_nextScanToAdd;
 
     Ui::ViewerGuiClass ui;
-    ViewerWidget* m_glwidget;
     TrajectoryDrawer* m_trajectoryDrawer;
     PointcloudDrawer* m_pointcloudDrawer;
     CameraFollowMode* m_cameraFollowMode;
