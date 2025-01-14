@@ -131,7 +131,7 @@ endif()
 find_package(PCL 1.2 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 
-find_package(catkin REQUIRED COMPONENTS roscpp tf)
+find_package(catkin REQUIRED COMPONENTS roscpp tf cv_bridge)
 include_directories(${catkin_INCLUDE_DIRS})
 
 # Now add these generated files to the ADD_EXECUTABLE step

@@ -67,6 +67,9 @@ void ViewerWidget::init() {
 
   // background color defaults to white
   this->setBackgroundColor( QColor(255,255,255) );
+
+  // Directly use texture color to avoid color being affected
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }
 
 void ViewerWidget::resetView(){
@@ -313,7 +316,81 @@ void ViewerWidget::clearAll(){
   }
 }
 
+GLuint createTextureFromCVMat(const cv::Mat& image) {
+    GLuint textureID;
+    glGenTextures(1, &textureID); // 生成纹理 ID
+    glBindTexture(GL_TEXTURE_2D, textureID); // 绑定纹理
+
+    // 设置纹理参数
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // // 将 cv::Mat 转换为 OpenGL 需要的格式
+    // cv::Mat imageRGBA;
+    // if (image.channels() == 3) {
+    //     cv::cvtColor(image, imageRGBA, cv::COLOR_BGR2RGBA); // BGR -> RGBA
+    // } else if (image.channels() == 4) {
+    //     cv::cvtColor(image, imageRGBA, cv::COLOR_BGRA2RGBA); // BGRA -> RGBA
+    // } else {
+    //     std::cerr << "Unsupported number of channels: " << image.channels() << std::endl;
+    //     return 0;
+    // }
+
+    // 上传图像数据到纹理
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.cols, image.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data);
+
+    // 解绑纹理
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return textureID;
+}
+
+void drawTexture2(GLuint textureID, int screenWidth, int screenHeight) {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, screenWidth, screenHeight, 0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // 禁用深度写入（避免背景影响深度缓冲区）
+    glDepthMask(GL_FALSE);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(0, 0);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(screenWidth, 0);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(screenWidth, screenHeight);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(0, screenHeight);
+    glEnd();
+
+    // 恢复深度写入
+    glDepthMask(GL_TRUE);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
+constexpr int screenWidth = 800, screenHeight = 600;
+
 void ViewerWidget::draw(){
+    // 清屏
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清空颜色和深度缓冲区
+    glDisable(GL_BLEND);
+
+    GLuint textureID = createTextureFromCVMat(background_img_);
+    // 绘制纹理
+    drawTexture2(textureID, screenWidth, screenHeight);
 
   // debugging: draw light in scene
   //drawLight(GL_LIGHT0);

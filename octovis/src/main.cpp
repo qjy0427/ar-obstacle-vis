@@ -8,6 +8,7 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_broadcaster.h>
+#include <cv_bridge/cv_bridge.h>
 #include <QtGui>
 #include <QApplication>
 
@@ -15,9 +16,10 @@
 #include "octovis/ViewerGui.h"
 
 
-std::mutex mutex_cloud, mutex_pose;
+std::mutex mutex_cloud, mutex_pose, mutex_image;
 sensor_msgs::PointCloud2 cloud;
 geometry_msgs::PoseStamped pose;
+cv::Mat image;
 std::shared_ptr<octomap::ViewerGui> gui;
 
 class PointCloudPoseSubscriber {
@@ -31,6 +33,8 @@ public:
 
         // 创建位姿订阅者，订阅 "/pose" 话题
         pose_sub_ = nh.subscribe("/mavros/local_position/pose", 1, &PointCloudPoseSubscriber::poseCallback, this);
+
+        image_sub_ = nh.subscribe("/iris_D435i/realsense/depth_camera/depth/image_raw", 1, &PointCloudPoseSubscriber::imageCallback, this);
     }
 
     // 点云回调函数
@@ -51,9 +55,21 @@ public:
         mutex_pose.unlock();
     }
 
+    void imageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
+        mutex_image.lock();
+        cv_bridge::CvImagePtr cv_ptr;
+        try {
+            cv_ptr = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::TYPE_16UC1);
+            image = cv_ptr->image;
+        } catch (cv_bridge::Exception& e) {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+            return;
+        }
+        mutex_image.unlock();
+    }
+
 private:
-    ros::Subscriber cloud_sub_;
-    ros::Subscriber pose_sub_;
+    ros::Subscriber cloud_sub_, pose_sub_, image_sub_;
 };
 
 // 假设你已经有了以下变量：
@@ -161,6 +177,11 @@ void addPointClouds()
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "depth_camera_base")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
 
         // octree->clear();
+        cv::Mat rgb_img;
+        cv::cvtColor(image, rgb_img, cv::COLOR_GRAY2RGB);
+        // multiply by 10, TODO: remove it after switching to normal pic
+        rgb_img.convertTo(rgb_img, CV_8UC3, 10);
+        gui->m_glwidget->background_img_ = rgb_img;
         updateOctomap(cloud, pose, octree);
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
         gui->m_glwidget->camera()->setOrientation(

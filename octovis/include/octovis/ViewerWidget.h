@@ -29,6 +29,7 @@
 #include "SelectionBox.h"
 #include <octomap/octomap.h>
 #include <qglviewer.h>
+#include <opencv2/opencv.hpp>
 
 namespace octomap{
 
@@ -36,6 +37,7 @@ class ViewerWidget : public QGLViewer {
   Q_OBJECT
 
  public:
+  cv::Mat background_img_;
 
   ViewerWidget(QWidget* parent = NULL);
   void clearAll();

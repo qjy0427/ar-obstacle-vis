@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0.2)
-PROJECT( octomap-distribution )
+PROJECT(ar-obstacle-vis)
 
 ENABLE_TESTING()  # enable CTest environment of subprojects
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)  # enables -fPIC in applicable compilers (required to avoid link errors in some cases)
