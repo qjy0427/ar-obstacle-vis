@@ -53,22 +53,22 @@ ViewerGui::ViewerGui(const std::string& filename, QWidget *parent, unsigned int 
   m_glwidget = new ViewerWidget(this);
   this->setCentralWidget(m_glwidget);
 
-  // Settings panel at the right side
-  ViewerSettingsPanel* settingsPanel = new ViewerSettingsPanel(this);
-  settingsPanel->setTreeDepth(initDepth);
-  QDockWidget* settingsDock = new QDockWidget("Octree / Scan graph settings", this);
-  settingsDock->setWidget(settingsPanel);
-  this->addDockWidget(Qt::RightDockWidgetArea, settingsDock);
-  ui.menuShow->addAction(settingsDock->toggleViewAction());
-
-  // Camera settings panel at the right side
-  ViewerSettingsPanelCamera* settingsCameraPanel = new ViewerSettingsPanelCamera(this);
-  QDockWidget *settingsCameraDock = new QDockWidget("Camera settings", this);
-  settingsCameraDock->setWidget(settingsCameraPanel);
-  this->addDockWidget(Qt::RightDockWidgetArea, settingsCameraDock);
-  this->tabifyDockWidget(settingsDock, settingsCameraDock);
-  settingsDock->raise();
-  ui.menuShow->addAction(settingsCameraDock->toggleViewAction());
+  // // Settings panel at the right side
+  // ViewerSettingsPanel* settingsPanel = new ViewerSettingsPanel(this);
+  // settingsPanel->setTreeDepth(initDepth);
+  // QDockWidget* settingsDock = new QDockWidget("Octree / Scan graph settings", this);
+  // settingsDock->setWidget(settingsPanel);
+  // this->addDockWidget(Qt::RightDockWidgetArea, settingsDock);
+  // ui.menuShow->addAction(settingsDock->toggleViewAction());
+  //
+  // // Camera settings panel at the right side
+  // ViewerSettingsPanelCamera* settingsCameraPanel = new ViewerSettingsPanelCamera(this);
+  // QDockWidget *settingsCameraDock = new QDockWidget("Camera settings", this);
+  // settingsCameraDock->setWidget(settingsCameraPanel);
+  // this->addDockWidget(Qt::RightDockWidgetArea, settingsCameraDock);
+  // this->tabifyDockWidget(settingsDock, settingsCameraDock);
+  // settingsDock->raise();
+  // ui.menuShow->addAction(settingsCameraDock->toggleViewAction());
 
   // status bar
   m_nodeSelected = new QLabel("Selected node coordinates", this);
@@ -85,43 +85,43 @@ ViewerGui::ViewerGui(const std::string& filename, QWidget *parent, unsigned int 
 
   connect(this, SIGNAL(updateStatusBar(QString, int)), statusBar(), SLOT(showMessage(QString, int)));
 
-  connect(settingsPanel, SIGNAL(treeDepthChanged(int)), this, SLOT(changeTreeDepth(int)));
-  connect(settingsPanel, SIGNAL(addNextScans(unsigned)), this, SLOT(addNextScans(unsigned)));
-  connect(settingsPanel, SIGNAL(gotoFirstScan()), this, SLOT(gotoFirstScan()));
-
-  connect(settingsCameraPanel, SIGNAL(jumpToFrame(unsigned)), m_cameraFollowMode, SLOT(jumpToFrame(unsigned)));
-  connect(settingsCameraPanel, SIGNAL(play()), m_cameraFollowMode, SLOT(play()));
-  connect(settingsCameraPanel, SIGNAL(pause()), m_cameraFollowMode, SLOT(pause()));
-  connect(settingsCameraPanel, SIGNAL(clearCameraPath()), m_cameraFollowMode, SLOT(clearCameraPath()));
-  connect(settingsCameraPanel, SIGNAL(saveToCameraPath()), m_cameraFollowMode, SLOT(saveToCameraPath()));
-  connect(settingsCameraPanel, SIGNAL(removeFromCameraPath()), m_cameraFollowMode, SLOT(removeFromCameraPath()));
-  connect(settingsCameraPanel, SIGNAL(addToCameraPath()), m_cameraFollowMode, SLOT(addToCameraPath()));
-  connect(settingsCameraPanel, SIGNAL(followCameraPath()), m_cameraFollowMode, SLOT(followCameraPath()));
-  connect(settingsCameraPanel, SIGNAL(followRobotPath()), m_cameraFollowMode, SLOT(followRobotPath()));
-
-  connect(m_cameraFollowMode, SIGNAL(changeNumberOfFrames(unsigned)), settingsCameraPanel, SLOT(setNumberOfFrames(unsigned)));
-  connect(m_cameraFollowMode, SIGNAL(frameChanged(unsigned)), settingsCameraPanel, SLOT(setCurrentFrame(unsigned)));
-  connect(m_cameraFollowMode, SIGNAL(stopped()), settingsCameraPanel, SLOT(setStopped()));
-  connect(m_cameraFollowMode, SIGNAL(scanGraphAvailable(bool)), settingsCameraPanel, SLOT(setRobotTrajectoryAvailable(bool)));
-
-  connect(m_cameraFollowMode, SIGNAL(deleteCameraPath(int)), m_glwidget, SLOT(deleteCameraPath(int)));
-  connect(m_cameraFollowMode, SIGNAL(removeFromCameraPath(int,int)), m_glwidget, SLOT(removeFromCameraPath(int,int)));
-  connect(m_cameraFollowMode, SIGNAL(appendToCameraPath(int, const octomath::Pose6D&)), m_glwidget, SLOT(appendToCameraPath(int, const octomath::Pose6D&)));
-  connect(m_cameraFollowMode, SIGNAL(appendCurrentToCameraPath(int)), m_glwidget, SLOT(appendCurrentToCameraPath(int)));
-  connect(m_cameraFollowMode, SIGNAL(addCurrentToCameraPath(int,int)), m_glwidget, SLOT(addCurrentToCameraPath(int,int)));
-  connect(m_cameraFollowMode, SIGNAL(updateCameraPath(int,int)), m_glwidget, SLOT(updateCameraPath(int,int)));
-  connect(m_cameraFollowMode, SIGNAL(playCameraPath(int,int)), m_glwidget, SLOT(playCameraPath(int,int)));
-  connect(m_cameraFollowMode, SIGNAL(stopCameraPath(int)), m_glwidget, SLOT(stopCameraPath(int)));
-  connect(m_cameraFollowMode, SIGNAL(jumpToCamFrame(int, int)), m_glwidget, SLOT(jumpToCamFrame(int, int)));
-  connect(m_glwidget, SIGNAL(cameraPathStopped(int)), m_cameraFollowMode, SLOT(cameraPathStopped(int)));
-  connect(m_glwidget, SIGNAL(cameraPathFrameChanged(int, int)), m_cameraFollowMode, SLOT(cameraPathFrameChanged(int, int)));
-
-  connect(this, SIGNAL(changeNumberOfScans(unsigned)), settingsPanel, SLOT(setNumberOfScans(unsigned)));
-  connect(this, SIGNAL(changeCurrentScan(unsigned)), settingsPanel, SLOT(setCurrentScan(unsigned)));
-  connect(this, SIGNAL(changeResolution(double)), settingsPanel, SLOT(setResolution(double)));
-
-  connect(settingsCameraPanel, SIGNAL(changeCamPosition(double, double, double, double, double, double)),
-          m_glwidget, SLOT(setCamPosition(double, double, double, double, double, double)));
+  // // connect(settingsPanel, SIGNAL(treeDepthChanged(int)), this, SLOT(changeTreeDepth(int)));
+  // // connect(settingsPanel, SIGNAL(addNextScans(unsigned)), this, SLOT(addNextScans(unsigned)));
+  // // connect(settingsPanel, SIGNAL(gotoFirstScan()), this, SLOT(gotoFirstScan()));
+  // //
+  // // connect(settingsCameraPanel, SIGNAL(jumpToFrame(unsigned)), m_cameraFollowMode, SLOT(jumpToFrame(unsigned)));
+  // // connect(settingsCameraPanel, SIGNAL(play()), m_cameraFollowMode, SLOT(play()));
+  // // connect(settingsCameraPanel, SIGNAL(pause()), m_cameraFollowMode, SLOT(pause()));
+  // // connect(settingsCameraPanel, SIGNAL(clearCameraPath()), m_cameraFollowMode, SLOT(clearCameraPath()));
+  // // connect(settingsCameraPanel, SIGNAL(saveToCameraPath()), m_cameraFollowMode, SLOT(saveToCameraPath()));
+  // // connect(settingsCameraPanel, SIGNAL(removeFromCameraPath()), m_cameraFollowMode, SLOT(removeFromCameraPath()));
+  // // connect(settingsCameraPanel, SIGNAL(addToCameraPath()), m_cameraFollowMode, SLOT(addToCameraPath()));
+  // // connect(settingsCameraPanel, SIGNAL(followCameraPath()), m_cameraFollowMode, SLOT(followCameraPath()));
+  // // connect(settingsCameraPanel, SIGNAL(followRobotPath()), m_cameraFollowMode, SLOT(followRobotPath()));
+  // //
+  // // connect(m_cameraFollowMode, SIGNAL(changeNumberOfFrames(unsigned)), settingsCameraPanel, SLOT(setNumberOfFrames(unsigned)));
+  // // connect(m_cameraFollowMode, SIGNAL(frameChanged(unsigned)), settingsCameraPanel, SLOT(setCurrentFrame(unsigned)));
+  // // connect(m_cameraFollowMode, SIGNAL(stopped()), settingsCameraPanel, SLOT(setStopped()));
+  // // connect(m_cameraFollowMode, SIGNAL(scanGraphAvailable(bool)), settingsCameraPanel, SLOT(setRobotTrajectoryAvailable(bool)));
+  //
+  // connect(m_cameraFollowMode, SIGNAL(deleteCameraPath(int)), m_glwidget, SLOT(deleteCameraPath(int)));
+  // connect(m_cameraFollowMode, SIGNAL(removeFromCameraPath(int,int)), m_glwidget, SLOT(removeFromCameraPath(int,int)));
+  // connect(m_cameraFollowMode, SIGNAL(appendToCameraPath(int, const octomath::Pose6D&)), m_glwidget, SLOT(appendToCameraPath(int, const octomath::Pose6D&)));
+  // connect(m_cameraFollowMode, SIGNAL(appendCurrentToCameraPath(int)), m_glwidget, SLOT(appendCurrentToCameraPath(int)));
+  // connect(m_cameraFollowMode, SIGNAL(addCurrentToCameraPath(int,int)), m_glwidget, SLOT(addCurrentToCameraPath(int,int)));
+  // connect(m_cameraFollowMode, SIGNAL(updateCameraPath(int,int)), m_glwidget, SLOT(updateCameraPath(int,int)));
+  // connect(m_cameraFollowMode, SIGNAL(playCameraPath(int,int)), m_glwidget, SLOT(playCameraPath(int,int)));
+  // connect(m_cameraFollowMode, SIGNAL(stopCameraPath(int)), m_glwidget, SLOT(stopCameraPath(int)));
+  // connect(m_cameraFollowMode, SIGNAL(jumpToCamFrame(int, int)), m_glwidget, SLOT(jumpToCamFrame(int, int)));
+  // connect(m_glwidget, SIGNAL(cameraPathStopped(int)), m_cameraFollowMode, SLOT(cameraPathStopped(int)));
+  // connect(m_glwidget, SIGNAL(cameraPathFrameChanged(int, int)), m_cameraFollowMode, SLOT(cameraPathFrameChanged(int, int)));
+  //
+  // connect(this, SIGNAL(changeNumberOfScans(unsigned)), settingsPanel, SLOT(setNumberOfScans(unsigned)));
+  // connect(this, SIGNAL(changeCurrentScan(unsigned)), settingsPanel, SLOT(setCurrentScan(unsigned)));
+  // connect(this, SIGNAL(changeResolution(double)), settingsPanel, SLOT(setResolution(double)));
+  //
+  // connect(settingsCameraPanel, SIGNAL(changeCamPosition(double, double, double, double, double, double)),
+  //         m_glwidget, SLOT(setCamPosition(double, double, double, double, double, double)));
   connect(m_cameraFollowMode, SIGNAL(changeCamPose(const octomath::Pose6D&)),
           m_glwidget, SLOT(setCamPose(const octomath::Pose6D&)));
 
