@@ -408,6 +408,7 @@ void ViewerWidget::draw(){
     img_mutex_.unlock();
     // 绘制纹理
     drawTexture2(textureID, screenWidth, screenHeight);
+    glDeleteTextures(1, &textureID);  // 释放旧的纹理
 
   // debugging: draw light in scene
   //drawLight(GL_LIGHT0);
