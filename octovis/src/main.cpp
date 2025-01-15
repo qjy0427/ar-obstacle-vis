@@ -129,7 +129,7 @@ void updateOctomap(
     // 6. 更新 OctoMap 的内部节点
     octree->updateInnerOccupancy();
 
-    std::cout << "octree->size(): " << octree->size() << "\n";
+    // std::cout << "octree->size(): " << octree->size() << "\n";
 
     // if (octree->size() > 1e6) {
     //     octree->prune();
@@ -180,14 +180,24 @@ void addPointClouds()
         cv::Mat rgb_img;
         cv::cvtColor(image, rgb_img, cv::COLOR_GRAY2RGB);
         // multiply by 10, TODO: remove it after switching to normal pic
-        rgb_img.convertTo(rgb_img, CV_8UC3, 10);
+        rgb_img.convertTo(rgb_img, CV_8UC3, 20);
+
+        gui->m_glwidget->img_mutex_.lock();
         gui->m_glwidget->background_img_ = rgb_img;
+        gui->m_glwidget->img_mutex_.unlock();
+
+        emit gui->m_glwidget->pauseRequested();
         updateOctomap(cloud, pose, octree);
+        // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
+        //           << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " "
+        //           << pose.pose.orientation.w << "\n";
+
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
         gui->m_glwidget->camera()->setOrientation(
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
         gui->m_glwidget->camera()->setPosition({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z});
         gui->showOcTree();
+        emit gui->m_glwidget->resumeRequested();
 
         last_time = cloud.header.stamp.toSec();
         mutex_pose.unlock();

@@ -21,9 +21,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
+#include <QTimer>
 
-#include <octovis/ViewerWidget.h>
 #include <manipulatedCameraFrame.h>
+#include <octovis/ViewerWidget.h>
 
 #ifndef M_PI_2
 #define M_PI_2 1.5707963267948966192E0
@@ -35,11 +36,25 @@ namespace octomap {
 
 ViewerWidget::ViewerWidget(QWidget* parent) :
         QGLViewer(parent), m_zMin(0.0),m_zMax(1.0) {
+    timer_ = new QTimer(this);
+    connect(timer_, &QTimer::timeout, this, &ViewerWidget::updateGL);
+    timer_->start(16); // 约60帧/秒
+    // 连接信号槽
+    connect(this, &ViewerWidget::pauseRequested, this, &ViewerWidget::pauseRendering);
+    connect(this, &ViewerWidget::resumeRequested, this, &ViewerWidget::resumeRendering);
 
   m_printoutMode = false;
   m_heightColorMode = false;
   m_semantic_coloring = false;
   m_drawSelectionBox = false;
+}
+
+void ViewerWidget::pauseRendering() const {
+    timer_->stop();
+}
+
+void ViewerWidget::resumeRendering() const {
+    timer_->start(16);
 }
 
 void ViewerWidget::init() {
@@ -388,7 +403,9 @@ void ViewerWidget::draw(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清空颜色和深度缓冲区
     glDisable(GL_BLEND);
 
+    img_mutex_.lock();
     GLuint textureID = createTextureFromCVMat(background_img_);
+    img_mutex_.unlock();
     // 绘制纹理
     drawTexture2(textureID, screenWidth, screenHeight);
 

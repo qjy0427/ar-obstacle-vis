@@ -37,6 +37,8 @@ class ViewerWidget : public QGLViewer {
   Q_OBJECT
 
  public:
+ QTimer* timer_;
+ std::mutex img_mutex_;
   cv::Mat background_img_;
 
   ViewerWidget(QWidget* parent = NULL);
@@ -58,6 +60,9 @@ class ViewerWidget : public QGLViewer {
   void removeSceneObject(SceneObject* obj);
 
  public slots:
+  void pauseRendering() const;
+  void resumeRendering() const;
+
   void enablePrintoutMode (bool enabled = true);
   void enableHeightColorMode (bool enabled = true);
   void enableSemanticColoring (bool enabled = true);
@@ -89,6 +94,8 @@ signals:
    void cameraPathStopped(int id);
    void cameraPathFrameChanged(int id, int current_camera_frame);
    void select(const QMouseEvent* e);
+   void pauseRequested();
+   void resumeRequested();
 
  protected:
 
