@@ -33,7 +33,7 @@ namespace octomap {
   OcTreeDrawer::OcTreeDrawer() : SceneObject(),
                                  m_occupiedThresSize(0), m_freeThresSize(0),
                                  m_occupiedSize(0), m_freeSize(0), m_selectionSize(0),
-                                 octree_grid_vertex_size(0), m_alphaOccupied(0.8), map_id(0)
+                                 octree_grid_vertex_size(0), m_alphaOccupied(0.3), map_id(0)
   {
     m_octree_grid_vis_initialized = false;
     m_drawOccupied = true;
