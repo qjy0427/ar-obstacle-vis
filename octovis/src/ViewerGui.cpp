@@ -290,7 +290,7 @@ void ViewerGui::showOcTree() {
   m_mapSizeStatus->setText(size);
   //}
 
-  m_glwidget->update();
+  // m_glwidget->update();
 
   // generate cubes -> display
   // timeval start;

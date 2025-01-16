@@ -37,6 +37,7 @@ class ViewerWidget : public QGLViewer {
   Q_OBJECT
 
  public:
+ bool pausing_ = false;
  QTimer* timer_;
  std::mutex img_mutex_;
   cv::Mat background_img_;
@@ -60,8 +61,8 @@ class ViewerWidget : public QGLViewer {
   void removeSceneObject(SceneObject* obj);
 
  public slots:
-  void pauseRendering() const;
-  void resumeRendering() const;
+  void pauseRendering();
+  void resumeRendering();
 
   void enablePrintoutMode (bool enabled = true);
   void enableHeightColorMode (bool enabled = true);
@@ -99,6 +100,7 @@ signals:
 
  protected:
 
+  void preDraw() override;
   virtual void draw();
   virtual void drawWithNames();
   virtual void init();

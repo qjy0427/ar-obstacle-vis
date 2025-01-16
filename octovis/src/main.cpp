@@ -76,6 +76,8 @@ private:
 // sensor_msgs::PointCloud2 cloud_msg; // 深度相机发布的点云消息
 // geometry_msgs::Pose sensor_pose;    // 深度相机的位姿
 
+bool written = false;
+
 void updateOctomap(
     const sensor_msgs::PointCloud2& cloud_msg,
     const geometry_msgs::PoseStamped& sensor_pose,
@@ -131,11 +133,14 @@ void updateOctomap(
 
     // std::cout << "octree->size(): " << octree->size() << "\n";
 
-    // if (octree->size() > 1e6) {
-    //     octree->prune();
-    //     octree->write("/home/jingye/Downloads/octomap.ot");
-    //     exit(0);
-    // }
+    if (octree->size() > 30000 && !written) {
+        octree->prune();
+        std::string path_to_write = "/home/jingye/Downloads/octomap.ot";
+        octree->write(path_to_write);
+        std::cout << "Written octomap to " << path_to_write << "\n";
+        written = true;
+        // exit(0);
+    }
 }
 
 void addPointClouds()
@@ -153,7 +158,7 @@ void addPointClouds()
 
     double last_time = 0;
     std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.5));
-        gui->addOctree(octree.get(), 0);
+    gui->addOctree(octree.get(), 0);
     while (ros::ok()) {
         if (last_time >= cloud.header.stamp.toSec()
             || fabs(pose.header.stamp.toSec() - cloud.header.stamp.toSec()) >= 0.5/30
@@ -178,26 +183,30 @@ void addPointClouds()
 
         // octree->clear();
         cv::Mat rgb_img;
-        cv::cvtColor(image, rgb_img, cv::COLOR_GRAY2RGB);
-        // multiply by 10, TODO: remove it after switching to normal pic
-        rgb_img.convertTo(rgb_img, CV_8UC3, 20);
+        if (!image.empty())
+        {
+            cv::cvtColor(image, rgb_img, cv::COLOR_GRAY2RGB);
+            // multiply by 10, TODO: remove it after switching to normal pic
+            rgb_img.convertTo(rgb_img, CV_8UC3, 20);
+        }
 
         gui->m_glwidget->img_mutex_.lock();
         gui->m_glwidget->background_img_ = rgb_img;
         gui->m_glwidget->img_mutex_.unlock();
 
-        emit gui->m_glwidget->pauseRequested();
-        updateOctomap(cloud, pose, octree);
-        // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
-        //           << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " "
-        //           << pose.pose.orientation.w << "\n";
-
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
         gui->m_glwidget->camera()->setOrientation(
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
         gui->m_glwidget->camera()->setPosition({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z});
+
+        emit gui->m_glwidget->pauseRequested();
+        updateOctomap(cloud, pose, octree);
         gui->showOcTree();
         emit gui->m_glwidget->resumeRequested();
+        // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
+        //           << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " "
+        //           << pose.pose.orientation.w << "\n";
+
 
         last_time = cloud.header.stamp.toSec();
         mutex_pose.unlock();

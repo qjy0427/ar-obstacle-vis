@@ -36,9 +36,10 @@ namespace octomap {
 
 ViewerWidget::ViewerWidget(QWidget* parent) :
         QGLViewer(parent), m_zMin(0.0),m_zMax(1.0) {
-    timer_ = new QTimer(this);
-    connect(timer_, &QTimer::timeout, this, &ViewerWidget::updateGL);
-    timer_->start(16); // 约60帧/秒
+    // timer_ = new QTimer(this);
+    // connect(timer_, &QTimer::timeout, this, &ViewerWidget::paintGL);
+    // timer_->start(16); // 约60帧/秒
+
     // 连接信号槽
     connect(this, &ViewerWidget::pauseRequested, this, &ViewerWidget::pauseRendering);
     connect(this, &ViewerWidget::resumeRequested, this, &ViewerWidget::resumeRendering);
@@ -49,12 +50,14 @@ ViewerWidget::ViewerWidget(QWidget* parent) :
   m_drawSelectionBox = false;
 }
 
-void ViewerWidget::pauseRendering() const {
-    timer_->stop();
+void ViewerWidget::pauseRendering() {
+    pausing_ = true;
+    // timer_->stop();
 }
 
-void ViewerWidget::resumeRendering() const {
-    timer_->start(16);
+void ViewerWidget::resumeRendering() {
+    pausing_ = false;
+    // timer_->start(16);
 }
 
 void ViewerWidget::init() {
@@ -396,9 +399,29 @@ void drawTexture2(GLuint textureID, int screenWidth, int screenHeight) {
     glMatrixMode(GL_MODELVIEW);
 }
 
+void ViewerWidget::preDraw() {
+    if (pausing_)
+    {
+        return;
+    }
+    // 清空颜色和深度缓冲区
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // GL_PROJECTION matrix
+    camera()->loadProjectionMatrix();
+    // GL_MODELVIEW matrix
+    camera()->loadModelViewMatrix();
+
+    Q_EMIT drawNeeded();
+}
+
 constexpr int screenWidth = 800, screenHeight = 600;
 
 void ViewerWidget::draw(){
+    if (pausing_)
+    {
+        return;
+    }
     // 清屏
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清空颜色和深度缓冲区
     glDisable(GL_BLEND);
@@ -447,7 +470,10 @@ void ViewerWidget::drawWithNames(){
 }
 
 void ViewerWidget::postDraw(){
-
+    if (pausing_)
+    {
+        return;
+    }
   // Reset model view matrix to world coordinates origin
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
