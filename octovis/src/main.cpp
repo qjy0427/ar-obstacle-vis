@@ -6,7 +6,7 @@
 #include <pcl/filters/filter.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
 #include <cv_bridge/cv_bridge.h>
 #include <QtGui>
@@ -18,7 +18,7 @@
 
 std::mutex mutex_cloud, mutex_pose, mutex_image;
 sensor_msgs::PointCloud2 cloud;
-geometry_msgs::PoseStamped pose;
+nav_msgs::Odometry pose;
 cv::Mat image;
 std::shared_ptr<octomap::ViewerGui> gui;
 
@@ -29,12 +29,12 @@ public:
         ros::NodeHandle nh;
 
         // 创建点云订阅者，订阅 "/cloud_in" 话题
-        cloud_sub_ = nh.subscribe("/iris_D435i/realsense/depth_camera/depth/points", 1, &PointCloudPoseSubscriber::cloudCallback, this);
+        cloud_sub_ = nh.subscribe("/points2", 1, &PointCloudPoseSubscriber::cloudCallback, this);
 
         // 创建位姿订阅者，订阅 "/pose" 话题
-        pose_sub_ = nh.subscribe("/mavros/local_position/pose", 1, &PointCloudPoseSubscriber::poseCallback, this);
+        pose_sub_ = nh.subscribe("/mavros/local_position/odom", 1, &PointCloudPoseSubscriber::poseCallback, this);
 
-        image_sub_ = nh.subscribe("/iris_D435i/realsense/depth_camera/depth/image_raw", 1, &PointCloudPoseSubscriber::imageCallback, this);
+        image_sub_ = nh.subscribe("/zhz/driver/cam0/image_raw", 1, &PointCloudPoseSubscriber::imageCallback, this);
     }
 
     // 点云回调函数
@@ -47,7 +47,7 @@ public:
     }
 
     // 位姿回调函数
-    void poseCallback(const geometry_msgs::PoseStampedConstPtr& pose_msg) {
+    void poseCallback(const nav_msgs::OdometryConstPtr& pose_msg) {
         // ROS_INFO("Received pose: x=%f, y=%f, z=%f",
         //     pose_msg->pose.position.x, pose_msg->pose.position.y, pose_msg->pose.position.z);
         mutex_pose.lock();
@@ -80,7 +80,7 @@ bool written = false;
 
 void updateOctomap(
     const sensor_msgs::PointCloud2& cloud_msg,
-    const geometry_msgs::PoseStamped& sensor_pose,
+    const nav_msgs::Odometry& sensor_pose,
     std::shared_ptr<octomap::OcTree>& octree) {
       // 1. 将 sensor_msgs::PointCloud2 转换为 PCL 点云
     pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
@@ -90,18 +90,18 @@ void updateOctomap(
     pcl::removeNaNFromPointCloud(pcl_cloud, pcl_cloud, indices);
 
     // 2. 将相机位姿转换为 octomap::point3d (传感器原点)
-    const octomap::point3d sensor_origin(sensor_pose.pose.position.x,
-                                         sensor_pose.pose.position.y,
-                                         sensor_pose.pose.position.z);
+    const octomap::point3d sensor_origin(sensor_pose.pose.pose.position.x,
+                                         sensor_pose.pose.pose.position.y,
+                                         sensor_pose.pose.pose.position.z);
 
     Eigen::Affine3d sensor_pose_eigen = Eigen::Isometry3d::Identity();
-    sensor_pose_eigen.translation() = Eigen::Vector3d(sensor_pose.pose.position.x,
-                                                      sensor_pose.pose.position.y,
-                                                      sensor_pose.pose.position.z);
-    sensor_pose_eigen.linear() = Eigen::Quaterniond(sensor_pose.pose.orientation.w,
-                                                    sensor_pose.pose.orientation.x,
-                                                    sensor_pose.pose.orientation.y,
-                                                    sensor_pose.pose.orientation.z).toRotationMatrix();
+    sensor_pose_eigen.translation() = Eigen::Vector3d(sensor_pose.pose.pose.position.x,
+                                                      sensor_pose.pose.pose.position.y,
+                                                      sensor_pose.pose.pose.position.z);
+    sensor_pose_eigen.linear() = Eigen::Quaterniond(sensor_pose.pose.pose.orientation.w,
+                                                    sensor_pose.pose.pose.orientation.x,
+                                                    sensor_pose.pose.pose.orientation.y,
+                                                    sensor_pose.pose.pose.orientation.z).toRotationMatrix();
     pcl::transformPointCloud(pcl_cloud, pcl_cloud, sensor_pose_eigen);
 
     // 3. 将 PCL 点云转换为 octomap::Pointcloud
@@ -133,14 +133,14 @@ void updateOctomap(
 
     // std::cout << "octree->size(): " << octree->size() << "\n";
 
-    if (octree->size() > 30000 && !written) {
-        octree->prune();
-        std::string path_to_write = "/home/jingye/Downloads/octomap.ot";
-        octree->write(path_to_write);
-        std::cout << "Written octomap to " << path_to_write << "\n";
-        written = true;
-        // exit(0);
-    }
+    // if (octree->size() > 30000 && !written) {
+    //     octree->prune();
+    //     std::string path_to_write = "/home/jingye/Downloads/octomap.ot";
+    //     octree->write(path_to_write);
+    //     std::cout << "Written octomap to " << path_to_write << "\n";
+    //     written = true;
+    //     // exit(0);
+    // }
 }
 
 void addPointClouds()
@@ -169,25 +169,25 @@ void addPointClouds()
         mutex_cloud.lock();
         mutex_pose.lock();
         tf::Transform transform;
-        transform.setOrigin(tf::Vector3(pose.pose.position.x, pose.pose.position.y, pose.pose.position.z));
+        const auto& pos = pose.pose.pose.position;
+        transform.setOrigin(tf::Vector3(pos.x, pos.y, pos.z));
 
-        Eigen::Quaterniond q_eigen(pose.pose.orientation.w, pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z);
+        auto& ori = pose.pose.pose.orientation;
+        Eigen::Quaterniond q_eigen(ori.w, ori.x, ori.y, ori.z);
         q_eigen = q_eigen * R_I_wrt_C;
-        pose.pose.orientation.x = q_eigen.x();
-        pose.pose.orientation.y = q_eigen.y();
-        pose.pose.orientation.z = q_eigen.z();
-        pose.pose.orientation.w = q_eigen.w();
+        ori.x = q_eigen.x();
+        ori.y = q_eigen.y();
+        ori.z = q_eigen.z();
+        ori.w = q_eigen.w();
 
         transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "depth_camera_base")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
+        br.sendTransform(tf::StampedTransform(transform, pose.header.stamp, "map", "stereo_frame")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
 
         // octree->clear();
         cv::Mat rgb_img;
         if (!image.empty())
         {
             cv::cvtColor(image, rgb_img, cv::COLOR_GRAY2RGB);
-            // multiply by 10, TODO: remove it after switching to normal pic
-            rgb_img.convertTo(rgb_img, CV_8UC3, 20);
         }
 
         gui->m_glwidget->img_mutex_.lock();
@@ -197,7 +197,7 @@ void addPointClouds()
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
         gui->m_glwidget->camera()->setOrientation(
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
-        gui->m_glwidget->camera()->setPosition({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z});
+        gui->m_glwidget->camera()->setPosition({pos.x, pos.y, pos.z});
 
         emit gui->m_glwidget->pauseRequested();
         updateOctomap(cloud, pose, octree);
