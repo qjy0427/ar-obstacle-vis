@@ -31,15 +31,17 @@
 #include <qglviewer.h>
 #include <opencv2/opencv.hpp>
 
-namespace octomap{
+namespace octomap {
 
 class ViewerWidget : public QGLViewer {
   Q_OBJECT
 
  public:
- bool pausing_ = false;
- QTimer* timer_;
- std::mutex img_mutex_;
+  int m_width = 1280;
+  int m_height = 960;
+  bool pausing_ = false;
+  QTimer* timer_;
+  std::mutex img_mutex_;
   cv::Mat background_img_;
 
   ViewerWidget(QWidget* parent = NULL);
@@ -99,7 +101,7 @@ signals:
    void resumeRequested();
 
  protected:
-
+  void resizeGL(int width, int height) override;
   void preDraw() override;
   virtual void draw();
   virtual void drawWithNames();

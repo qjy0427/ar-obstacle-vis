@@ -50,6 +50,16 @@ ViewerWidget::ViewerWidget(QWidget* parent) :
   m_drawSelectionBox = false;
 }
 
+void ViewerWidget::resizeGL(int width, int height)
+{
+    std::cout << "Received signal to resize to " << width << "x" << height << ", but we're actually resizing it to "
+              << m_width << "x" << m_height << std::endl;
+    width = m_width; height = m_height;
+    QGLViewer::resizeGL(width, height);
+    // glViewport( 0, 0, GLint(width), GLint(height) );
+    // camera()->setScreenWidthAndHeight(this->width(), this->height());
+}
+
 void ViewerWidget::pauseRendering() {
     pausing_ = true;
     // timer_->stop();

@@ -271,6 +271,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     gui = std::make_shared<octomap::ViewerGui>("", nullptr, 16);
+    gui->resize(1280, 960);
     gui->show();
 
     std::thread t(addPointClouds);
