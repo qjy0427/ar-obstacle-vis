@@ -355,9 +355,26 @@ GLuint createTextureFromCVMat(const cv::Mat& image) {
     //     std::cerr << "Unsupported number of channels: " << image.channels() << std::endl;
     //     return 0;
     // }
+    int width = 2 * image.cols;  // double it to avoid half image
+    int height = image.rows;
+    int bytesPerPixel = image.channels();
+
+    // 分配新缓冲区
+    auto* newImageData = new unsigned char[width * height * bytesPerPixel];
+
+    // 逐行复制数据，处理步长问题 (这里假设没有左右交错)
+    for (int y = 0; y < height; ++y) {
+        const auto* sourceRow = image.ptr<uchar>(y);
+        uchar* destRow = newImageData + y * width * bytesPerPixel;
+        for(int x = 0; x < width * bytesPerPixel; ++x)
+        {
+            destRow[x] = sourceRow[x];
+        }
+    }
 
     // 上传图像数据到纹理
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.cols, image.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, image.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, newImageData);
+    delete newImageData;
 
     // 解绑纹理
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -415,7 +432,7 @@ void ViewerWidget::preDraw() {
     Q_EMIT drawNeeded();
 }
 
-constexpr int screenWidth = 800, screenHeight = 600;
+constexpr int screenWidth = 640, screenHeight = 480;
 
 void ViewerWidget::draw(){
     if (pausing_)
