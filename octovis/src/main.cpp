@@ -22,6 +22,37 @@ nav_msgs::Odometry pose;
 cv::Mat image;
 std::shared_ptr<octomap::ViewerGui> gui;
 
+const Eigen::Matrix4d FRD_wrt_FLU = (Eigen::Matrix4d() <<
+    1.0, 0.0, 0.0, 0.0,
+    0.0,-1.0, 0.0, 0.0,
+    0.0, 0.0,-1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+).finished();
+
+// // Quat --> Euler(Z-Y-X) (pitch [X] range is limited to [-pi/2, pi/2])
+// Eigen::Vector3d Quaterniond2EulerAngles(const Eigen::Quaterniond& q) {
+//     Eigen::Vector3d angles;
+//
+//     // roll (x-axis rotation)
+//     double sinr_cosp = 2 * (q.w() * q.x() + q.y() * q.z());
+//     double cosr_cosp = 1 - 2 * (q.x() * q.x() + q.y() * q.y());
+//     angles(2) = std::atan2(sinr_cosp, cosr_cosp);
+//
+//     // pitch (y-axis rotation)
+//     double sinp = 2 * (q.w() * q.y() - q.z() * q.x());
+//     if (std::abs(sinp) >= 1)
+//         angles(1) = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+//     else
+//         angles(1) = std::asin(sinp);
+//
+//     // yaw (z-axis rotation)
+//     double siny_cosp = 2 * (q.w() * q.z() + q.x() * q.y());
+//     double cosy_cosp = 1 - 2 * (q.y() * q.y() + q.z() * q.z());
+//     angles(0) = std::atan2(siny_cosp, cosy_cosp);
+//
+//     return angles;
+// }
+
 class PointCloudPoseSubscriber {
 public:
     PointCloudPoseSubscriber() {
@@ -151,9 +182,16 @@ void addPointClouds()
     // tf publisher
     tf::TransformBroadcaster br;
 
-    Eigen::Quaterniond R_I_wrt_C = Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitZ()) *
-                                   Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) *
-                                   Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitX());
+    // Eigen::Quaterniond R_I_wrt_C = Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitZ()) *
+    //                                Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) *
+    //                                Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitX());
+
+    Eigen::Matrix4d T_C_wrt_I = (Eigen::Matrix4d() <<
+        0.000000, 0.139173, 0.990268, 0.031976,
+        1.000000, 0.000000, 0.000000, -0.055000,
+        0.000000, 0.990268, -0.139173, 0.011920,
+        0, 0, 0, 1
+        ).finished();
 
 
     double last_time = 0;
@@ -170,18 +208,25 @@ void addPointClouds()
         mutex_pose.lock();
         tf::Transform transform;
         const auto& pos = pose.pose.pose.position;
-        transform.setOrigin(tf::Vector3(pos.x, pos.y, pos.z));
 
         auto& ori = pose.pose.pose.orientation;
-        Eigen::Quaterniond q_eigen(ori.w, ori.x, ori.y, ori.z);
-        q_eigen = q_eigen * R_I_wrt_C;
+        // Eigen::Quaterniond q_eigen(ori.w, ori.x, ori.y, ori.z);
+        // q_eigen = q_eigen * R_I_wrt_C;
+        Eigen::Matrix4d T_I_wrt_W = Eigen::Matrix4d::Identity();
+        T_I_wrt_W.block<3, 3>(0, 0) = Eigen::Quaterniond(ori.w, ori.x, ori.y, ori.z).toRotationMatrix();
+        T_I_wrt_W.block<3, 1>(0, 3) = Eigen::Vector3d(pos.x, pos.y, pos.z);
+        T_I_wrt_W = T_I_wrt_W * FRD_wrt_FLU;
+        Eigen::Matrix4d T_C_wrt_W = T_I_wrt_W * T_C_wrt_I;
+        Eigen::Vector3d pos_C(T_C_wrt_W.block<3, 1>(0, 3));
+        Eigen::Quaterniond q_eigen(T_C_wrt_W.block<3, 3>(0, 0));
         ori.x = q_eigen.x();
         ori.y = q_eigen.y();
         ori.z = q_eigen.z();
         ori.w = q_eigen.w();
 
-        transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
-        br.sendTransform(tf::StampedTransform(transform, pose.header.stamp, "map", "stereo_frame")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
+        // transform.setOrigin(tf::Vector3(pos_C.x(), pos_C.y(), pos_C.z()));
+        // transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
+        // br.sendTransform(tf::StampedTransform(transform, pose.header.stamp, "map", "stereo_frame")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
 
         // octree->clear();
         cv::Mat rgb_img;
