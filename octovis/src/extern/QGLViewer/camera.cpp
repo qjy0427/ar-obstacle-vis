@@ -359,13 +359,31 @@ void Camera::computeProjectionMatrix() const
 		case Camera::PERSPECTIVE:
 		{
 			// #CONNECTION# all non null coefficients were set to 0.0 in constructor.
-			const qreal f = 1.0/tan(fieldOfView()/2.0);
-			projectionMatrix_[0]  = f/aspectRatio();
-			projectionMatrix_[5]  = f;
-			projectionMatrix_[10] = (ZNear + ZFar) / (ZNear - ZFar);
-			projectionMatrix_[11] = -1.0;
-			projectionMatrix_[14] = 2.0 * ZNear * ZFar / (ZNear - ZFar);
-			projectionMatrix_[15] = 0.0;
+			// Original projection matrix:
+
+			// const qreal f = 1.0/tan(fieldOfView()/2.0);
+			// projectionMatrix_[0]  = f/aspectRatio();
+			// projectionMatrix_[5]  = f;
+			// projectionMatrix_[10] = (ZNear + ZFar) / (ZNear - ZFar);
+			// projectionMatrix_[11] = -1.0;
+			// projectionMatrix_[14] = 2.0 * ZNear * ZFar / (ZNear - ZFar);
+			// projectionMatrix_[15] = 0.0;
+
+			/* Using Q20 projection matrix (for 241028-6 dataset):
+            [ 1.296157  0         -0.013316     0       ]
+            [ 0         1.620060   0.009114     0       ]
+            [ 0         0         -1.002002    -0.200200]
+            [ 0         0         -1            0       ]
+			 */
+		    projectionMatrix_[0] = 1.296157;
+		    projectionMatrix_[5] = 1.620060;
+		    projectionMatrix_[8] = -0.013316;
+		    projectionMatrix_[9] = 0.009114;
+		    projectionMatrix_[10] = -1.002002;
+		    projectionMatrix_[11] = -1.0;
+		    projectionMatrix_[14] = -0.200200;
+		    projectionMatrix_[15] = 0.0;
+
 			// same as gluPerspective( 180.0*fieldOfView()/M_PI, aspectRatio(), zNear(), zFar() );
 			break;
 		}
