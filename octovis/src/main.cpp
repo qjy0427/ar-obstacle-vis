@@ -281,10 +281,6 @@ void addPointClouds()
         gui->m_glwidget->background_img_ = rgb_img;
         gui->m_glwidget->img_mutex_.unlock();
 
-        const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
-        gui->m_glwidget->camera()->setOrientation(
-            {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
-        gui->m_glwidget->camera()->setPosition({pos.x, pos.y, pos.z});
 
         const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" + std::to_string(image_time) + ".tiff";
         cv::Mat depth_map = cv::imread(depth_map_path, cv::IMREAD_UNCHANGED);
@@ -297,6 +293,10 @@ void addPointClouds()
         auto point_cloud = DepthMap2PointCloud(depth_map);
 
         emit gui->m_glwidget->pauseRequested();
+        const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
+        gui->m_glwidget->camera()->setOrientation(
+            {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
+        gui->m_glwidget->camera()->setPosition({pos.x, pos.y, pos.z});
         updateOctomap(point_cloud, pose, octree);
         gui->showOcTree();
         emit gui->m_glwidget->resumeRequested();
