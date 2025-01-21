@@ -8,7 +8,7 @@ option(BUILD_OCTOVIS_SUBPROJECT "Build targets from subproject octovis" ON)
 option(BUILD_DYNAMICETD3D_SUBPROJECT  "Build targets from subproject dynamicEDT3D" ON)
 option(OCTOVIS_QT5 "Link Octovis against Qt5?" ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 ADD_SUBDIRECTORY( octomap )
 

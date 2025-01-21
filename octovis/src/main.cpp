@@ -20,6 +20,7 @@ std::mutex mutex_cloud, mutex_pose, mutex_image;
 sensor_msgs::PointCloud2 cloud;
 nav_msgs::Odometry pose;
 cv::Mat image;
+uint64_t image_time = 0;
 std::shared_ptr<octomap::ViewerGui> gui;
 
 const Eigen::Matrix4d FRD_wrt_FLU = (Eigen::Matrix4d() <<
@@ -92,6 +93,7 @@ public:
         try {
             cv_ptr = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::TYPE_16UC1);
             image = cv_ptr->image;
+            image_time = image_msg->header.stamp.toNSec();
         } catch (cv_bridge::Exception& e) {
             ROS_ERROR("cv_bridge exception: %s", e.what());
             return;
@@ -110,12 +112,12 @@ private:
 bool written = false;
 
 void updateOctomap(
-    const sensor_msgs::PointCloud2& cloud_msg,
+    pcl::PointCloud<pcl::PointXYZ>& pcl_cloud,
     const nav_msgs::Odometry& sensor_pose,
     std::shared_ptr<octomap::OcTree>& octree) {
       // 1. 将 sensor_msgs::PointCloud2 转换为 PCL 点云
-    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
-    pcl::fromROSMsg(cloud_msg, pcl_cloud);
+    // pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+    // pcl::fromROSMsg(cloud_msg, pcl_cloud);
     // remove nan pts
     std::vector<int> indices;
     pcl::removeNaNFromPointCloud(pcl_cloud, pcl_cloud, indices);
@@ -174,6 +176,40 @@ void updateOctomap(
     // }
 }
 
+pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
+{
+    // 相机内参（示例值，替换为你的相机参数）
+    float fu = 414.770203;  // x方向焦距
+    float fv = 388.814423;  // y方向焦距
+    float u0 = 324.260956;  // 主点x
+    float v0 = 237.812637;  // 主点y
+
+    // 创建PCL点云对象
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+
+    // 遍历深度图中的每个像素
+    for (int v = 0; v < depth_map.rows; ++v) {
+        for (int u = 0; u < depth_map.cols; ++u) {
+            // 获取深度值，假设深度图为16位图像，单位为毫米
+            uint16_t depth_value = depth_map.at<uint16_t>(v, u);
+
+            // 将深度值转换为米
+            float Z = depth_value / 1000.0f;
+
+            // 如果深度值为零（无效的深度值），则跳过
+            if (Z < 0.1 || Z > 30) continue;
+
+            // 使用相机内参将像素转换为3D空间中的点
+            float X = (u - u0) * Z / fu;
+            float Y = (v - v0) * Z / fv;
+
+            // 将计算出的3D点添加到点云中
+            cloud.points.emplace_back(X, Y, Z);
+        }
+    }
+    return cloud;
+}
+
 void addPointClouds()
 {
     // 创建一个 OctoMap
@@ -193,21 +229,24 @@ void addPointClouds()
         0, 0, 0, 1
         ).finished();
 
+    int sleep_usec = 1e3;
 
-    double last_time = 0;
+    uint64_t last_time = 0;
+    int i_tiff = 0;
     std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.5));
     gui->addOctree(octree.get(), 0);
     while (ros::ok()) {
-        if (last_time >= cloud.header.stamp.toSec()
-            || fabs(pose.header.stamp.toSec() - cloud.header.stamp.toSec()) >= 0.5/30
-            )
+        mutex_pose.lock();
+        // mutex_cloud.lock();
+        if (last_time >= image_time)
         {
+            mutex_pose.unlock();
             continue;
         }
-        mutex_cloud.lock();
-        mutex_pose.lock();
+        last_time = image_time;
+
         tf::Transform transform;
-        const auto& pos = pose.pose.pose.position;
+        auto& pos = pose.pose.pose.position;
 
         auto& ori = pose.pose.pose.orientation;
         // Eigen::Quaterniond q_eigen(ori.w, ori.x, ori.y, ori.z);
@@ -218,6 +257,9 @@ void addPointClouds()
         T_I_wrt_W = T_I_wrt_W * FRD_wrt_FLU;
         Eigen::Matrix4d T_C_wrt_W = T_I_wrt_W * T_C_wrt_I;
         Eigen::Vector3d pos_C(T_C_wrt_W.block<3, 1>(0, 3));
+        pos.x = pos_C.x();
+        pos.y = pos_C.y();
+        pos.z = pos_C.z();
         Eigen::Quaterniond q_eigen(T_C_wrt_W.block<3, 3>(0, 0));
         ori.x = q_eigen.x();
         ori.y = q_eigen.y();
@@ -228,7 +270,7 @@ void addPointClouds()
         // transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
         // br.sendTransform(tf::StampedTransform(transform, pose.header.stamp, "map", "stereo_frame")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
 
-        // octree->clear();
+        octree->clear();
         cv::Mat rgb_img;
         if (!image.empty())
         {
@@ -244,8 +286,18 @@ void addPointClouds()
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
         gui->m_glwidget->camera()->setPosition({pos.x, pos.y, pos.z});
 
+        const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" + std::to_string(image_time) + ".tiff";
+        cv::Mat depth_map = cv::imread(depth_map_path, cv::IMREAD_UNCHANGED);
+        if (depth_map.empty()) {
+            std::cerr << "Error loading depth image at " << depth_map_path << "\n";
+            mutex_pose.unlock();
+            usleep(sleep_usec);
+            continue;
+        }
+        auto point_cloud = DepthMap2PointCloud(depth_map);
+
         emit gui->m_glwidget->pauseRequested();
-        updateOctomap(cloud, pose, octree);
+        updateOctomap(point_cloud, pose, octree);
         gui->showOcTree();
         emit gui->m_glwidget->resumeRequested();
         // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
@@ -253,12 +305,11 @@ void addPointClouds()
         //           << pose.pose.orientation.w << "\n";
 
 
-        last_time = cloud.header.stamp.toSec();
         mutex_pose.unlock();
-        mutex_cloud.unlock();
+        // mutex_cloud.unlock();
         // loop_rate.sleep();
         // sleep(1);
-        usleep(1e4);
+        usleep(sleep_usec);
     }
 }
 
