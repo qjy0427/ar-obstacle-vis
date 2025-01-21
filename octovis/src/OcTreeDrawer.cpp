@@ -33,7 +33,7 @@ namespace octomap {
   OcTreeDrawer::OcTreeDrawer() : SceneObject(),
                                  m_occupiedThresSize(0), m_freeThresSize(0),
                                  m_occupiedSize(0), m_freeSize(0), m_selectionSize(0),
-                                 octree_grid_vertex_size(0), m_alphaOccupied(0.3), map_id(0)
+                                 octree_grid_vertex_size(0), m_alphaOccupied(0.2), map_id(0)
   {
     m_octree_grid_vis_initialized = false;
     m_drawOccupied = true;
@@ -696,7 +696,7 @@ namespace octomap {
       // colors for printout mode:
       if (m_colorMode == CM_PRINTOUT) {
         if (!m_drawFree) { // gray on white background
-          glColor3f(0.6f, 0.6f, 0.6f);
+          glColor4f(0.7f, 0.5f, 0.5f, 0.0f);
         }
         else {
           glColor3f(0.1f, 0.1f, 0.1f);

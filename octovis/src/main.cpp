@@ -197,7 +197,7 @@ pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
             float Z = depth_value / 1000.0f;
 
             // 如果深度值为零（无效的深度值），则跳过
-            if (Z < 0.1 || Z > 30) continue;
+            if (Z < 0.1 || Z > 50) continue;
 
             // 使用相机内参将像素转换为3D空间中的点
             float X = (u - u0) * Z / fu;
@@ -232,9 +232,9 @@ void addPointClouds()
     int sleep_usec = 1e3;
 
     uint64_t last_time = 0;
-    int i_tiff = 0;
     std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.5));
     gui->addOctree(octree.get(), 0);
+    bool printout_mode_toggled = false;
     while (ros::ok()) {
         mutex_pose.lock();
         // mutex_cloud.lock();
@@ -244,6 +244,12 @@ void addPointClouds()
             continue;
         }
         last_time = image_time;
+
+        if (!printout_mode_toggled)
+        {
+            gui->on_actionPrintout_mode_toggled(true);
+            printout_mode_toggled = true;
+        }
 
         tf::Transform transform;
         auto& pos = pose.pose.pose.position;

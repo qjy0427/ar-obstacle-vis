@@ -68,6 +68,7 @@ namespace octomap {
    void addOctree(AbstractOcTree* tree, int id, pose6d origin);
    void addOctree(AbstractOcTree* tree, int id);
    void showOcTree();
+   void on_actionPrintout_mode_toggled(bool checked);
 
    ViewerWidget* m_glwidget;
 
@@ -104,7 +105,6 @@ namespace octomap {
     void on_actionExpand_tree_triggered();
     void on_actionConvert_ml_tree_triggered();
     void on_actionReload_Octree_triggered();
-    void on_actionPrintout_mode_toggled(bool checked);
     void on_actionSelection_box_toggled(bool checked);
     void on_actionHeight_map_toggled(bool checked);
     void on_actionSemanticColoring_toggled(bool checked);
