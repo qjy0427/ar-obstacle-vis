@@ -804,7 +804,7 @@ namespace octomap {
       glEnable (GL_LINE_SMOOTH);
       glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);   // Draw Polygons only as Wireframes
       glLineWidth(2.0f);
-      glColor3f(0.0f, 0.0f, 0.0f);
+      glColor3f(1.0f, 0.0f, 0.0f);
       glCullFace(GL_FRONT_AND_BACK);        // Don't draw any Polygons faces
       //glDepthFunc (GL_LEQUAL);
 
