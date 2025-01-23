@@ -197,7 +197,7 @@ pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
             float Z = depth_value / 1000.0f;
 
             // 如果深度值为零（无效的深度值），则跳过
-            if (Z < 0.1 || Z > 50) continue;
+            if (Z < 0.1 || Z > 15) continue;
 
             // 使用相机内参将像素转换为3D空间中的点
             float X = (u - u0) * Z / fu;
