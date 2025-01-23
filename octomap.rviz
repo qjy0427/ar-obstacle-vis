@@ -125,9 +125,9 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.00999999978
+      Size (m): 0.05
       Style: Flat Squares
-      Topic: /iris_D435i/realsense/depth_camera/depth/points
+      Topic: /points2
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -173,7 +173,7 @@ Visualization Manager:
     - Alpha: 1
       Class: rviz/Image
       Enabled: true
-      Image Topic: /iris_D435i/realsense/depth_camera/depth/image_raw
+      Image Topic: /zhz/driver/cam0/image_raw
       Max Value: 1
       Median window: 5
       Min Value: 0

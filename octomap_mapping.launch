@@ -1,21 +1,34 @@
 <launch><!-- mention the octomap launch commands-->
 
-    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
-        <param name="resolution" value="0.20" />
+<!--    &lt;!&ndash; stereo_image_proc 节点 &ndash;&gt;-->
+<!--    <node pkg="stereo_image_proc" type="stereo_image_proc" name="stereo_image_proc">-->
+<!--        &lt;!&ndash; 重映射话题名称 &ndash;&gt;-->
+<!--        <remap from="left/image_raw"       to="/zhz/driver/cam0/image_raw"/>-->
+<!--        <remap from="left/camera_info"     to="/zhz/driver/cam0/camera_info"/>-->
+<!--        <remap from="right/image_raw"      to="/zhz/driver/cam1/image_raw"/>-->
+<!--        <remap from="right/camera_info"    to="/zhz/driver/cam1/camera_info"/>-->
 
-        <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
-        <param name="frame_id" type="string" value="map" />
+<!--        &lt;!&ndash; 设置参数 &ndash;&gt;-->
+<!--        <param name="disparity_range" value="128"/>-->
+<!--        <param name="correlation_window_size" value="15"/>-->
+<!--&lt;!&ndash;        <param name="min_disparity" value="1"/>&ndash;&gt;-->
+<!--        <param name="uniqueness_ratio" value="15"/>-->
+<!--        <param name="texture_threshold" value="10"/>-->
+<!--        <param name="speckle_size" value="1000"/>-->
+<!--        <param name="speckle_range" value="4"/>-->
+<!--&lt;!&ndash;        <param name="disp_12_max_diff" value="2"/>&ndash;&gt;-->
 
-        <!-- maximum range to integrate (speedup!) -->
-        <param name="sensor_model/max_range" value="15" />
-
-        <!-- data source to integrate (PointCloud2) -->
-        <remap from="/iris_D435i/realsense/depth_camera/depth/points" to="voxel_grid/output" />
-
-    </node>
+<!--        &lt;!&ndash; 订阅和发布的话题 &ndash;&gt;-->
+<!--        &lt;!&ndash; 默认情况下，stereo_image_proc 会发布以下话题：&ndash;&gt;-->
+<!--        &lt;!&ndash;-->
+<!--            - disparity (stereo_msgs/DisparityImage)-->
+<!--            - point_cloud (sensor_msgs/PointCloud)-->
+<!--            - point_cloud2 (sensor_msgs/PointCloud2)-->
+<!--        &ndash;&gt;-->
+<!--    </node>-->
 
     <!-- 启动 rviz -->
-    <arg name="rviz_config" default="/home/jingye/CLionProjects/ar-obstacle-vis/src/ar-obstacle-vis/octomap.rviz"/>
+    <arg name="rviz_config" default="/home/jingye/Projects/ar-obstacle-vis/src/ar-obstacle-vis/octomap.rviz"/>
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)"/>
 
 </launch>
