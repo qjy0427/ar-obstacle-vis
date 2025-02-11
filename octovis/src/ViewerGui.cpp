@@ -128,6 +128,9 @@ ViewerGui::ViewerGui(const std::string& filename, QWidget *parent, unsigned int 
   connect(ui.actionReset_view, SIGNAL(triggered()), m_glwidget, SLOT(resetView()));
   connect(m_glwidget, SIGNAL(select(const QMouseEvent*)), this, SLOT(voxelSelected(const QMouseEvent*)));
 
+  setMenuBar(nullptr);   //  <-- 添加这行代码来移除菜单栏
+  setStatusBar(nullptr); //  <-- 添加这行代码来移除状态栏
+
   if (filename != ""){
     m_filename = filename;
     openFile();
