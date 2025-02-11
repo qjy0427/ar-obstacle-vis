@@ -101,7 +101,6 @@ signals:
    void resumeRequested();
 
  protected:
-  void resizeGL(int width, int height) override;
   void preDraw() override;
   virtual void draw();
   virtual void drawWithNames();
