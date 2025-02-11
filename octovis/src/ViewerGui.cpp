@@ -70,20 +70,20 @@ ViewerGui::ViewerGui(const std::string& filename, QWidget *parent, unsigned int 
   // settingsDock->raise();
   // ui.menuShow->addAction(settingsCameraDock->toggleViewAction());
 
-  // status bar
-  m_nodeSelected = new QLabel("Selected node coordinates", this);
-  m_mapSizeStatus = new QLabel("Map size", this);
-  m_mapMemoryStatus = new QLabel("Memory consumption", this);
-  m_nodeSelected->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-  m_mapSizeStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-  m_mapMemoryStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-  statusBar()->addPermanentWidget(m_nodeSelected);
-  statusBar()->addPermanentWidget(m_mapSizeStatus);
-  statusBar()->addPermanentWidget(m_mapMemoryStatus);
-
+  // // status bar
+  // m_nodeSelected = new QLabel("Selected node coordinates", this);
+  // m_mapSizeStatus = new QLabel("Map size", this);
+  // m_mapMemoryStatus = new QLabel("Memory consumption", this);
+  // m_nodeSelected->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  // m_mapSizeStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  // m_mapMemoryStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  // statusBar()->addPermanentWidget(m_nodeSelected);
+  // statusBar()->addPermanentWidget(m_mapSizeStatus);
+  // statusBar()->addPermanentWidget(m_mapMemoryStatus);
+  //
   m_cameraFollowMode = new CameraFollowMode();
-
-  connect(this, SIGNAL(updateStatusBar(QString, int)), statusBar(), SLOT(showMessage(QString, int)));
+  //
+  // connect(this, SIGNAL(updateStatusBar(QString, int)), statusBar(), SLOT(showMessage(QString, int)));
 
   // // connect(settingsPanel, SIGNAL(treeDepthChanged(int)), this, SLOT(changeTreeDepth(int)));
   // // connect(settingsPanel, SIGNAL(addNextScans(unsigned)), this, SLOT(addNextScans(unsigned)));
@@ -283,11 +283,11 @@ void ViewerGui::showOcTree() {
   m_glwidget->setSceneBoundingBox(qglviewer::Vec(minX, minY, minZ), qglviewer::Vec(maxX, maxY, maxZ));
 
   //if (m_octrees.size()) {
-  QString size = QString("%L1 x %L2 x %L3 m^3; %L4 nodes").arg(sizeX).arg(sizeY).arg(sizeZ).arg(unsigned(num_nodes));
-  QString memory = QString("Single node: %L1 B; ").arg(memorySingleNode)
-            + QString ("Octree: %L1 B (%L2 MB)").arg(memoryUsage).arg((double) memoryUsage/(1024.*1024.), 0, 'f', 3);
-  m_mapMemoryStatus->setText(memory);
-  m_mapSizeStatus->setText(size);
+  // QString size = QString("%L1 x %L2 x %L3 m^3; %L4 nodes").arg(sizeX).arg(sizeY).arg(sizeZ).arg(unsigned(num_nodes));
+  // QString memory = QString("Single node: %L1 B; ").arg(memorySingleNode)
+  //           + QString ("Octree: %L1 B (%L2 MB)").arg(memoryUsage).arg((double) memoryUsage/(1024.*1024.), 0, 'f', 3);
+  // m_mapMemoryStatus->setText(memory);
+  // m_mapSizeStatus->setText(size);
   //}
 
   // m_glwidget->update();

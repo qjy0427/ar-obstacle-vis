@@ -37,8 +37,8 @@ class ViewerWidget : public QGLViewer {
   Q_OBJECT
 
  public:
-  int m_width = 1280;
-  int m_height = 960;
+  int m_width = 640;
+  int m_height = 480;
   bool pausing_ = false;
   QTimer* timer_;
   std::mutex img_mutex_;
