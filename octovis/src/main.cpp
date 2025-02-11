@@ -4,6 +4,7 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/filter.h>
+#include <pcl/filters/voxel_grid.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Pose.h>
 #include <nav_msgs/Odometry.h>
@@ -207,6 +208,11 @@ pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
             cloud.points.emplace_back(X, Y, Z);
         }
     }
+    // downsample cloud
+    pcl::VoxelGrid<pcl::PointXYZ> sor;
+    sor.setInputCloud(cloud.makeShared());
+    sor.setLeafSize(0.5f, 0.5f, 0.5f);
+    sor.filter(cloud);
     return cloud;
 }
 
