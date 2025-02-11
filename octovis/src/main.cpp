@@ -1,4 +1,6 @@
 #include <iostream>
+#include <filesystem>
+
 #include <pcl/common/transforms.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -189,8 +191,9 @@ pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
     pcl::PointCloud<pcl::PointXYZ> cloud;
 
     // 遍历深度图中的每个像素
-    for (int v = 0; v < depth_map.rows; ++v) {
-        for (int u = 0; u < depth_map.cols; ++u) {
+    cloud.points.reserve(320 * 240);
+    for (int v = 0; v < depth_map.rows; v += 2) {
+        for (int u = 0; u < depth_map.cols; u += 2) {
             // 获取深度值，假设深度图为16位图像，单位为毫米
             uint16_t depth_value = depth_map.at<uint16_t>(v, u);
 
@@ -235,8 +238,26 @@ void addPointClouds()
         0, 0, 0, 1
         ).finished();
 
-    int sleep_usec = 1e3;
+    // Preload depth map
+    std::unordered_map<uint64_t, cv::Mat> depth_map_cache;
+    int loaded_depth_map_count = 0;
+    for (const auto& entry : std::filesystem::directory_iterator("/home/jingye/Downloads/depth_map")) {
+        const std::string depth_map_path = entry.path().string();
+        if (depth_map_path.find(".tiff") == std::string::npos) {
+            continue;
+        }
+        cv::Mat depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
+        if (depth_map.empty()) {
+            std::cerr << "Error loading depth image at " << depth_map_path << "\n";
+            continue;
+        }
+        const std::string time_str = depth_map_path.substr(depth_map_path.find_last_of('/') + 1, depth_map_path.find_last_of('.') - depth_map_path.find_last_of('/') - 1);
+        const uint64_t time = std::stoull(time_str);
+        depth_map_cache[time] = depth_map;
+        std::cout << "Loaded " << ++loaded_depth_map_count << " depth images\n";
+    }
 
+    int sleep_usec = 1e3;
     uint64_t last_time = 0;
     std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.5));
     gui->addOctree(octree.get(), 0);
@@ -247,6 +268,7 @@ void addPointClouds()
         if (last_time >= image_time)
         {
             mutex_pose.unlock();
+            usleep(sleep_usec);
             continue;
         }
         last_time = image_time;
@@ -294,15 +316,13 @@ void addPointClouds()
         gui->m_glwidget->img_mutex_.unlock();
 
 
-        const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" + std::to_string(image_time) + ".tiff";
-        cv::Mat depth_map = cv::imread(depth_map_path, cv::IMREAD_UNCHANGED);
-        if (depth_map.empty()) {
-            std::cerr << "Error loading depth image at " << depth_map_path << "\n";
+        if (depth_map_cache.count(image_time) == 0) {
+            std::cerr << "Error loading depth image of " << image_time << "\n";
             mutex_pose.unlock();
             usleep(sleep_usec);
             continue;
         }
-        auto point_cloud = DepthMap2PointCloud(depth_map);
+        auto point_cloud = DepthMap2PointCloud(depth_map_cache[image_time]);
 
         emit gui->m_glwidget->pauseRequested();
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
