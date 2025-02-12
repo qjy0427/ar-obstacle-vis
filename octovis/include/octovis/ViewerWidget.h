@@ -101,6 +101,7 @@ signals:
    void resumeRequested();
 
  protected:
+  void paintGL() override;
   void preDraw() override;
   virtual void draw();
   virtual void drawWithNames();

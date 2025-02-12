@@ -50,6 +50,43 @@ ViewerWidget::ViewerWidget(QWidget* parent) :
   m_drawSelectionBox = false;
 }
 
+/*! Main paint method, inherited from \c QGLWidget.
+
+Calls the following methods, in that order:
+\arg preDraw() (or preDrawStereo() if viewer displaysInStereo()) : places the camera in the world coordinate system.
+\arg draw() (or fastDraw() when the camera is manipulated) : main drawing method. Should be overloaded.
+\arg postDraw() : display of visual hints (world axis, FPS...) */
+void ViewerWidget::paintGL()
+{
+    if (displaysInStereo())
+    {
+        for (int view=1; view>=0; --view)
+        {
+            // Clears screen, set model view matrix with shifted matrix for ith buffer
+            preDrawStereo(view);
+            // Used defined method. Default is empty
+            if (camera()->frame()->isManipulated())
+                fastDraw();
+            else
+                draw();
+            postDraw();
+        }
+    }
+    else
+    {
+        // Clears screen, set model view matrix...
+        preDraw();
+        // Used defined method. Default calls draw()
+        if (camera()->frame()->isManipulated())
+            fastDraw();
+        else
+            draw();
+        // Add visual hints: axis, camera, grid...
+        postDraw();
+    }
+    Q_EMIT drawFinished(true);
+}
+
 void ViewerWidget::pauseRendering() {
     pausing_ = true;
     // timer_->stop();
