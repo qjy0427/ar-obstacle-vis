@@ -241,21 +241,21 @@ void addPointClouds()
     // Preload depth map
     std::unordered_map<uint64_t, cv::Mat> depth_map_cache;
     int loaded_depth_map_count = 0;
-    for (const auto& entry : std::filesystem::directory_iterator("/home/jingye/Downloads/depth_map")) {
-        const std::string depth_map_path = entry.path().string();
-        if (depth_map_path.find(".tiff") == std::string::npos) {
-            continue;
-        }
-        cv::Mat depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
-        if (depth_map.empty()) {
-            std::cerr << "Error loading depth image at " << depth_map_path << "\n";
-            continue;
-        }
-        const std::string time_str = depth_map_path.substr(depth_map_path.find_last_of('/') + 1, depth_map_path.find_last_of('.') - depth_map_path.find_last_of('/') - 1);
-        const uint64_t time = std::stoull(time_str);
-        depth_map_cache[time] = depth_map;
-        std::cout << "Loaded " << ++loaded_depth_map_count << " depth images\n";
-    }
+    // for (const auto& entry : std::filesystem::directory_iterator("/home/jingye/Downloads/depth_map")) {
+    //     const std::string depth_map_path = entry.path().string();
+    //     if (depth_map_path.find(".tiff") == std::string::npos) {
+    //         continue;
+    //     }
+    //     cv::Mat depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
+    //     if (depth_map.empty()) {
+    //         std::cerr << "Error loading depth image at " << depth_map_path << "\n";
+    //         continue;
+    //     }
+    //     const std::string time_str = depth_map_path.substr(depth_map_path.find_last_of('/') + 1, depth_map_path.find_last_of('.') - depth_map_path.find_last_of('/') - 1);
+    //     const uint64_t time = std::stoull(time_str);
+    //     depth_map_cache[time] = depth_map;
+    //     std::cout << "Loaded " << ++loaded_depth_map_count << " depth images\n";
+    // }
 
     int sleep_usec = 1e3;
     uint64_t last_time = 0;
@@ -315,14 +315,22 @@ void addPointClouds()
         gui->m_glwidget->background_img_ = rgb_img;
         gui->m_glwidget->img_mutex_.unlock();
 
-
+        cv::Mat depth_map;
         if (depth_map_cache.count(image_time) == 0) {
-            std::cerr << "Error loading depth image of " << image_time << "\n";
-            mutex_pose.unlock();
-            usleep(sleep_usec);
-            continue;
+            const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" +
+                std::to_string(image_time) + ".tiff";
+            depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
+            if (depth_map.empty()) {
+                std::cerr << "Error loading depth image at " << depth_map_path << "\n";
+                mutex_pose.unlock();
+                usleep(sleep_usec);
+                continue;
+            }
+        } else
+        {
+            depth_map = depth_map_cache[image_time];
         }
-        auto point_cloud = DepthMap2PointCloud(depth_map_cache[image_time]);
+        auto point_cloud = DepthMap2PointCloud(depth_map);
 
         emit gui->m_glwidget->pauseRequested();
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
@@ -354,7 +362,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     gui = std::make_shared<octomap::ViewerGui>("", nullptr, 16);
-    gui->resize(640, 480);
+    gui->resize(640, 504);
     gui->show();
 
     std::thread t(addPointClouds);
