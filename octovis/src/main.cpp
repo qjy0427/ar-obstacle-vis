@@ -219,6 +219,11 @@ pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
     return cloud;
 }
 
+double getTime()
+{
+    return ros::Time::now().toSec();
+}
+
 void addPointClouds()
 {
     // 创建一个 OctoMap
@@ -304,7 +309,6 @@ void addPointClouds()
         // transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
         // br.sendTransform(tf::StampedTransform(transform, pose.header.stamp, "map", "stereo_frame")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
 
-        octree->clear();
         cv::Mat rgb_img;
         if (!image.empty())
         {
@@ -315,6 +319,7 @@ void addPointClouds()
         gui->m_glwidget->background_img_ = rgb_img;
         gui->m_glwidget->img_mutex_.unlock();
 
+        double start_time = getTime();
         cv::Mat depth_map;
         if (depth_map_cache.count(image_time) == 0) {
             const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" +
@@ -331,14 +336,26 @@ void addPointClouds()
             depth_map = depth_map_cache[image_time];
         }
         auto point_cloud = DepthMap2PointCloud(depth_map);
+        std::cout << (getTime() - start_time) * 1e3 << " ms (depth map loading time)\n";
 
         emit gui->m_glwidget->pauseRequested();
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
         gui->m_glwidget->camera()->setOrientation(
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
         gui->m_glwidget->camera()->setPosition({pos.x, pos.y, pos.z});
+
+        start_time = getTime();
+        octree->clear();
+        std::cout << (getTime() - start_time) * 1e3 << " ms (clear octomap time)\n";
+
+        start_time = getTime();
         updateOctomap(point_cloud, pose, octree);
+        std::cout << (getTime() - start_time) * 1e3 << " ms (update octomap time)\n";
+
+        start_time = getTime();
         gui->showOcTree();
+        std::cout << (getTime() - start_time) * 1e3 << " ms (show octomap time)\n========================\n";
+
         emit gui->m_glwidget->resumeRequested();
         // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
         //           << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " "

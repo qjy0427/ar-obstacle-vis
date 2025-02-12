@@ -22,6 +22,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 #include <QTimer>
+#include <QElapsedTimer>
 
 #include <manipulatedCameraFrame.h>
 #include <octovis/ViewerWidget.h>
@@ -80,6 +81,9 @@ Calls the following methods, in that order:
 \arg postDraw() : display of visual hints (world axis, FPS...) */
 void ViewerWidget::paintGL()
 {
+    QElapsedTimer timer;
+    timer.start(); // 开始计时
+
     if (displaysInStereo())
     {
         for (int view=1; view>=0; --view)
@@ -108,7 +112,10 @@ void ViewerWidget::paintGL()
     }
     Q_EMIT drawFinished(true);
 
-    saveScreenshot();
+    // saveScreenshot();
+
+    const double elapsedMilliseconds = timer.nsecsElapsed() / 1e6; // ms
+    std::cout << elapsedMilliseconds << " ms (Frame render time)\n";
 }
 
 void ViewerWidget::pauseRendering() {
