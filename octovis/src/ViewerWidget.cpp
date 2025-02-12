@@ -50,6 +50,28 @@ ViewerWidget::ViewerWidget(QWidget* parent) :
   m_drawSelectionBox = false;
 }
 
+void ViewerWidget::saveScreenshot()
+{
+    int width = this->width();
+    int height = this->height();
+
+    // 1. 读取 OpenGL 帧缓冲区像素数据 (RGBA 格式)
+    QImage image(width, height, QImage::Format_RGBA8888); // 创建 QImage，用于存储像素数据
+    uchar* pixels = image.bits(); // 获取 QImage 的像素数据指针
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels); // 读取像素数据
+
+    // 2. 垂直翻转图像 (OpenGL 帧缓冲区通常是倒置的)
+    QImage mirroredImage = image.mirrored(false, true);
+
+    const std::string filename = "/home/jingye/Pictures/opengl_screenshot/screenshot" + to_string(img_idx++) + ".png";
+    // 4. 保存 QImage 到文件
+    if (mirroredImage.save((filename).c_str())) {
+        std::cout << "Screenshot saved to: " << filename << "\n";
+    } else {
+        std::cout << "Failed to save screenshot to: " << filename << "\n";
+    }
+}
+
 /*! Main paint method, inherited from \c QGLWidget.
 
 Calls the following methods, in that order:
@@ -85,6 +107,8 @@ void ViewerWidget::paintGL()
         postDraw();
     }
     Q_EMIT drawFinished(true);
+
+    saveScreenshot();
 }
 
 void ViewerWidget::pauseRendering() {

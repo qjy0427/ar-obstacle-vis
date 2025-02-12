@@ -36,6 +36,8 @@ namespace octomap {
 class ViewerWidget : public QGLViewer {
   Q_OBJECT
 
+ int img_idx = 0;
+
  public:
   int m_width = 640;
   int m_height = 480;
@@ -45,6 +47,7 @@ class ViewerWidget : public QGLViewer {
   cv::Mat background_img_;
 
   ViewerWidget(QWidget* parent = NULL);
+  void saveScreenshot();
   void clearAll();
 
   /**
