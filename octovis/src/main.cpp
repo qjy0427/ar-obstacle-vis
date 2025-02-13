@@ -245,22 +245,24 @@ void addPointClouds()
 
     // Preload depth map
     std::unordered_map<uint64_t, cv::Mat> depth_map_cache;
+    /*
     int loaded_depth_map_count = 0;
-    // for (const auto& entry : std::filesystem::directory_iterator("/home/jingye/Downloads/depth_map")) {
-    //     const std::string depth_map_path = entry.path().string();
-    //     if (depth_map_path.find(".tiff") == std::string::npos) {
-    //         continue;
-    //     }
-    //     cv::Mat depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
-    //     if (depth_map.empty()) {
-    //         std::cerr << "Error loading depth image at " << depth_map_path << "\n";
-    //         continue;
-    //     }
-    //     const std::string time_str = depth_map_path.substr(depth_map_path.find_last_of('/') + 1, depth_map_path.find_last_of('.') - depth_map_path.find_last_of('/') - 1);
-    //     const uint64_t time = std::stoull(time_str);
-    //     depth_map_cache[time] = depth_map;
-    //     std::cout << "Loaded " << ++loaded_depth_map_count << " depth images\n";
-    // }
+    for (const auto& entry : std::filesystem::directory_iterator("/home/jingye/Downloads/depth_map")) {
+        const std::string depth_map_path = entry.path().string();
+        if (depth_map_path.find(".tiff") == std::string::npos) {
+            continue;
+        }
+        cv::Mat depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
+        if (depth_map.empty()) {
+            std::cerr << "Error loading depth image at " << depth_map_path << "\n";
+            continue;
+        }
+        const std::string time_str = depth_map_path.substr(depth_map_path.find_last_of('/') + 1, depth_map_path.find_last_of('.') - depth_map_path.find_last_of('/') - 1);
+        const uint64_t time = std::stoull(time_str);
+        depth_map_cache[time] = depth_map;
+        std::cout << "Loaded " << ++loaded_depth_map_count << " depth images\n";
+    }
+    */
 
     int sleep_usec = 1e3;
     uint64_t last_time = 0;
@@ -309,6 +311,7 @@ void addPointClouds()
         // transform.setRotation(tf::Quaternion(q_eigen.x(), q_eigen.y(), q_eigen.z(), q_eigen.w()));
         // br.sendTransform(tf::StampedTransform(transform, pose.header.stamp, "map", "stereo_frame")); // 发布变换 (变换, 时间戳, 父坐标系, 子坐标系)
 
+        double start_time = getTime();
         cv::Mat rgb_img;
         if (!image.empty())
         {
@@ -319,7 +322,6 @@ void addPointClouds()
         gui->m_glwidget->background_img_ = rgb_img;
         gui->m_glwidget->img_mutex_.unlock();
 
-        double start_time = getTime();
         cv::Mat depth_map;
         if (depth_map_cache.count(image_time) == 0) {
             const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" +
@@ -336,11 +338,11 @@ void addPointClouds()
             depth_map = depth_map_cache[image_time];
         }
         auto point_cloud = DepthMap2PointCloud(depth_map);
-        std::cout << (getTime() - start_time) * 1e3 << " ms (depth map loading time)\n";
+        // std::cout << (getTime() - start_time) * 1e3 << " ms (depth map loading time)\n";
 
         emit gui->m_glwidget->pauseRequested();
         while (gui->m_glwidget->painting_) {
-            std::cout << "Waiting for painting to finish...\n";
+            // std::cout << "Waiting for painting to finish...\n";
             usleep(1e3);
         }
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
@@ -348,17 +350,18 @@ void addPointClouds()
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
         gui->m_glwidget->camera()->setPosition({pos.x, pos.y, pos.z});
 
-        start_time = getTime();
+        // start_time = getTime();
         octree->clear();
-        std::cout << (getTime() - start_time) * 1e3 << " ms (clear octomap time)\n";
+        // std::cout << (getTime() - start_time) * 1e3 << " ms (clear octomap time)\n";
 
-        start_time = getTime();
+        // start_time = getTime();
         updateOctomap(point_cloud, pose, octree);
-        std::cout << (getTime() - start_time) * 1e3 << " ms (update octomap time)\n";
+        // std::cout << (getTime() - start_time) * 1e3 << " ms (update octomap time)\n";
 
-        start_time = getTime();
+        // start_time = getTime();
         gui->showOcTree();
-        std::cout << (getTime() - start_time) * 1e3 << " ms (show octomap time)\n========================\n";
+        std::cout << (getTime() - start_time) * 1e3 << " ms (Octomap process time)---------------------------\n"
+                                                       "========================\n";
 
         emit gui->m_glwidget->resumeRequested();
         // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
