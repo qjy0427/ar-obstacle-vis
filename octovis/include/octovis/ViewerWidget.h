@@ -42,6 +42,7 @@ class ViewerWidget : public QGLViewer {
   int m_width = 640;
   int m_height = 480;
   bool pausing_ = false;
+  bool painting_ = false;
   QTimer* timer_;
   std::mutex img_mutex_;
   cv::Mat background_img_;

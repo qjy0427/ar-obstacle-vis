@@ -339,6 +339,10 @@ void addPointClouds()
         std::cout << (getTime() - start_time) * 1e3 << " ms (depth map loading time)\n";
 
         emit gui->m_glwidget->pauseRequested();
+        while (gui->m_glwidget->painting_) {
+            std::cout << "Waiting for painting to finish...\n";
+            usleep(1e3);
+        }
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
         gui->m_glwidget->camera()->setOrientation(
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});

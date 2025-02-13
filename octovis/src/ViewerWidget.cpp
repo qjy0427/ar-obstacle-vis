@@ -81,6 +81,7 @@ Calls the following methods, in that order:
 \arg postDraw() : display of visual hints (world axis, FPS...) */
 void ViewerWidget::paintGL()
 {
+    painting_ = true;
     QElapsedTimer timer;
     timer.start(); // 开始计时
 
@@ -116,6 +117,7 @@ void ViewerWidget::paintGL()
 
     const double elapsedMilliseconds = timer.nsecsElapsed() / 1e6; // ms
     std::cout << elapsedMilliseconds << " ms (Frame render time)\n";
+    painting_ = false;
 }
 
 void ViewerWidget::pauseRendering() {
