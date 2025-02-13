@@ -376,7 +376,6 @@ void addPointClouds()
         // loop_rate.sleep();
         // sleep(1);
         usleep(sleep_usec);
-        emit gui->m_glwidget->pauseRequested();
     }
 }
 

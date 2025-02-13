@@ -21,11 +21,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
-#include <QTimer>
-#include <QElapsedTimer>
 
 #include <manipulatedCameraFrame.h>
 #include <octovis/ViewerWidget.h>
+#include <thread>
 
 #ifndef M_PI_2
 #define M_PI_2 1.5707963267948966192E0
@@ -34,6 +33,9 @@
 using namespace std;
 
 namespace octomap {
+
+constexpr int targetFPS = 20;
+constexpr std::chrono::nanoseconds targetFrameTime(static_cast<int>(1e9 / targetFPS));
 
 ViewerWidget::ViewerWidget(QWidget* parent) :
         QGLViewer(parent), m_zMin(0.0),m_zMax(1.0) {
@@ -81,9 +83,12 @@ Calls the following methods, in that order:
 \arg postDraw() : display of visual hints (world axis, FPS...) */
 void ViewerWidget::paintGL()
 {
+    if (pausing_)
+    {
+        return;
+    }
     painting_ = true;
-    QElapsedTimer timer;
-    timer.start(); // 开始计时
+    const auto frameStart = std::chrono::high_resolution_clock::now();
 
     if (displaysInStereo())
     {
@@ -115,9 +120,16 @@ void ViewerWidget::paintGL()
 
     // saveScreenshot();
 
-    const double elapsedMilliseconds = timer.nsecsElapsed() / 1e6; // ms
-    std::cout << elapsedMilliseconds << " ms (Frame render time)\n";
     painting_ = false;
+
+    // 计算并等待剩余时间
+    const auto frameEnd = std::chrono::high_resolution_clock::now();
+    std::cout << (frameEnd - frameStart).count() / 1e6 << " ms (Frame render time)\n";
+
+    if (const auto sleepDuration = targetFrameTime - (frameEnd - frameStart) - std::chrono::milliseconds(1);
+            sleepDuration > std::chrono::nanoseconds(0)) {
+        std::this_thread::sleep_for(sleepDuration);
+    }
 }
 
 void ViewerWidget::pauseRendering() {
@@ -487,10 +499,6 @@ void drawTexture2(GLuint textureID, int screenWidth, int screenHeight) {
 }
 
 void ViewerWidget::preDraw() {
-    if (pausing_)
-    {
-        return;
-    }
     // 清空颜色和深度缓冲区
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -505,10 +513,6 @@ void ViewerWidget::preDraw() {
 constexpr int screenWidth = 640, screenHeight = 480;
 
 void ViewerWidget::draw(){
-    if (pausing_)
-    {
-        return;
-    }
     // 清屏
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清空颜色和深度缓冲区
     glDisable(GL_BLEND);
@@ -557,10 +561,6 @@ void ViewerWidget::drawWithNames(){
 }
 
 void ViewerWidget::postDraw(){
-    if (pausing_)
-    {
-        return;
-    }
   // Reset model view matrix to world coordinates origin
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
