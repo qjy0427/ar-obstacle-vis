@@ -18,7 +18,7 @@
 #include "octomap/OcTree.h"
 #include "octovis/ViewerGui.h"
 
-
+float voxel_size = 1.0;  // in meters
 std::mutex mutex_cloud, mutex_pose, mutex_image;
 sensor_msgs::PointCloud2 cloud;
 nav_msgs::Odometry pose;
@@ -214,7 +214,7 @@ pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
     // downsample cloud
     pcl::VoxelGrid<pcl::PointXYZ> sor;
     sor.setInputCloud(cloud.makeShared());
-    sor.setLeafSize(0.5f, 0.5f, 0.5f);
+    sor.setLeafSize(voxel_size, voxel_size, voxel_size);
     sor.filter(cloud);
     return cloud;
 }
@@ -264,7 +264,7 @@ void addPointClouds()
 
     int sleep_usec = 1e3;
     uint64_t last_time = 0;
-    std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(0.5));
+    std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(voxel_size));
     gui->addOctree(octree.get(), 0);
     bool printout_mode_toggled = false;
     while (ros::ok()) {
