@@ -34,9 +34,6 @@ using namespace std;
 
 namespace octomap {
 
-constexpr int targetFPS = 20;
-constexpr std::chrono::nanoseconds targetFrameTime(static_cast<int>(1e9 / targetFPS));
-
 ViewerWidget::ViewerWidget(QWidget* parent) :
         QGLViewer(parent), m_zMin(0.0),m_zMax(1.0) {
     // timer_ = new QTimer(this);
@@ -83,7 +80,7 @@ Calls the following methods, in that order:
 \arg postDraw() : display of visual hints (world axis, FPS...) */
 void ViewerWidget::paintGL()
 {
-    if (pausing_)
+    if (pausing_ || !needs_repainting_)
     {
         return;
     }
@@ -121,15 +118,11 @@ void ViewerWidget::paintGL()
     // saveScreenshot();
 
     painting_ = false;
+    needs_repainting_ = false;
 
     // 计算并等待剩余时间
     const auto frameEnd = std::chrono::high_resolution_clock::now();
     std::cout << (frameEnd - frameStart).count() / 1e6 << " ms (Frame render time)\n";
-
-    if (const auto sleepDuration = targetFrameTime - (frameEnd - frameStart) - std::chrono::milliseconds(1);
-            sleepDuration > std::chrono::nanoseconds(0)) {
-        std::this_thread::sleep_for(sleepDuration);
-    }
 }
 
 void ViewerWidget::pauseRendering() {

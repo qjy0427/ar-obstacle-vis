@@ -365,6 +365,7 @@ void addPointClouds()
         std::cout << (getTime() - start_time) * 1e3 << " ms (Octomap process time)---------------------------\n"
                                                        "========================\n";
 
+        gui->m_glwidget->needs_repainting_ = true;
         emit gui->m_glwidget->resumeRequested();
         // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
         //           << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " "
