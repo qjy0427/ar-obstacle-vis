@@ -226,6 +226,8 @@ double getTime()
 
 void addPointClouds()
 {
+    emit gui->m_glwidget->pauseRequested();
+
     // 创建一个 OctoMap
     ros::Rate loop_rate(100); // 设置循环频率为 10 Hz
 
@@ -374,6 +376,7 @@ void addPointClouds()
         // loop_rate.sleep();
         // sleep(1);
         usleep(sleep_usec);
+        emit gui->m_glwidget->pauseRequested();
     }
 }
 
