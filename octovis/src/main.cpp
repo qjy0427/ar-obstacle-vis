@@ -271,6 +271,7 @@ void addPointClouds()
     std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(voxel_size));
     gui->addOctree(octree.get(), 0);
     bool printout_mode_toggled = false;
+    int i_frame = 0;
     while (ros::ok()) {
         mutex_pose.lock();
         // mutex_cloud.lock();
@@ -281,6 +282,11 @@ void addPointClouds()
             continue;
         }
         last_time = image_time;
+        bool updates_octomap = false;
+        if (i_frame++ % 4 == 0)  // Lower the update rate of octomap
+        {
+            updates_octomap = true;
+        }
 
         if (!printout_mode_toggled)
         {
@@ -324,23 +330,27 @@ void addPointClouds()
         gui->m_glwidget->background_img_ = rgb_img;
         gui->m_glwidget->img_mutex_.unlock();
 
-        cv::Mat depth_map;
-        if (depth_map_cache.count(image_time) == 0) {
-            const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" +
-                std::to_string(image_time) + ".tiff";
-            depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
-            if (depth_map.empty()) {
-                std::cerr << "Error loading depth image at " << depth_map_path << "\n";
-                mutex_pose.unlock();
-                usleep(sleep_usec);
-                continue;
-            }
-        } else
+        pcl::PointCloud<pcl::PointXYZ> point_cloud;
+        if (updates_octomap)
         {
-            depth_map = depth_map_cache[image_time];
+            cv::Mat depth_map;
+            if (depth_map_cache.count(image_time) == 0) {
+                const std::string depth_map_path = "/home/jingye/Downloads/depth_map/" +
+                    std::to_string(image_time) + ".tiff";
+                depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
+                if (depth_map.empty()) {
+                    std::cerr << "Error loading depth image at " << depth_map_path << "\n";
+                    mutex_pose.unlock();
+                    usleep(sleep_usec);
+                    continue;
+                }
+            } else
+            {
+                depth_map = depth_map_cache[image_time];
+            }
+            point_cloud = DepthMap2PointCloud(depth_map);
+            // std::cout << (getTime() - start_time) * 1e3 << " ms (depth map loading time)\n";
         }
-        auto point_cloud = DepthMap2PointCloud(depth_map);
-        // std::cout << (getTime() - start_time) * 1e3 << " ms (depth map loading time)\n";
 
         emit gui->m_glwidget->pauseRequested();
         while (gui->m_glwidget->painting_) {
@@ -352,15 +362,18 @@ void addPointClouds()
             {octovis_cam_q.x(), octovis_cam_q.y(), octovis_cam_q.z(), octovis_cam_q.w()});
         gui->m_glwidget->camera()->setPosition({pos.x, pos.y, pos.z});
 
-        // start_time = getTime();
-        octree->clear();
-        // std::cout << (getTime() - start_time) * 1e3 << " ms (clear octomap time)\n";
+        if (updates_octomap)
+        {
+            // start_time = getTime();
+            octree->clear();
+            // std::cout << (getTime() - start_time) * 1e3 << " ms (clear octomap time)\n";
 
-        // start_time = getTime();
-        updateOctomap(point_cloud, pose, octree);
-        // std::cout << (getTime() - start_time) * 1e3 << " ms (update octomap time)\n";
+            // start_time = getTime();
+            updateOctomap(point_cloud, pose, octree);
+            // std::cout << (getTime() - start_time) * 1e3 << " ms (update octomap time)\n";
 
-        // start_time = getTime();
+            // start_time = getTime();
+        }
         gui->showOcTree();
         std::cout << (getTime() - start_time) * 1e3 << " ms (Octomap process time)---------------------------\n"
                                                        "========================\n";
