@@ -7,6 +7,7 @@
 doc
 html
 .qglviewer.xml
+.qmake.stash
 
 # build output:
 lib
@@ -27,3 +28,9 @@ Makefile
 *.bt
 *.ot
 *.graph
+
+# Jetbrains
+.idea/
+cmake-build-debug/
+cmake-build-release/
+cmake-build-relwithdebinfo/
