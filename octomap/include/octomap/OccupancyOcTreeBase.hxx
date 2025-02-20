@@ -184,19 +184,20 @@ namespace octomap {
       threadIdx = omp_get_thread_num();
 #endif
       KeyRay* keyray = &(this->keyrays.at(threadIdx));
-
+      if (keyray->size() > 1 || free_cells.size() > 1)
+      {}  // Suppress unused warning...
 
       if (!use_bbx_limit) { // no BBX specified
         if ((maxrange < 0.0) || ((p - origin).norm() <= maxrange) ) { // is not maxrange meas.
-          // free cells
-          if (this->computeRayKeys(origin, p, *keyray)){
-#ifdef _OPENMP
-            #pragma omp critical (free_insert)
-#endif
-            {
-              free_cells.insert(keyray->begin(), keyray->end());
-            }
-          }
+//           // free cells
+//           if (this->computeRayKeys(origin, p, *keyray)){
+// #ifdef _OPENMP
+//             #pragma omp critical (free_insert)
+// #endif
+//             {
+//               free_cells.insert(keyray->begin(), keyray->end());
+//             }
+//           }
           // occupied endpoint
           OcTreeKey key;
           if (this->coordToKeyChecked(p, key)){
@@ -208,16 +209,16 @@ namespace octomap {
             }
           }
         } else { // user set a maxrange and length is above
-          point3d direction = (p - origin).normalized ();
-          point3d new_end = origin + direction * (float) maxrange;
-          if (this->computeRayKeys(origin, new_end, *keyray)){
-#ifdef _OPENMP
-            #pragma omp critical (free_insert)
-#endif
-            {
-              free_cells.insert(keyray->begin(), keyray->end());
-            }
-          }
+//           point3d direction = (p - origin).normalized ();
+//           point3d new_end = origin + direction * (float) maxrange;
+//           if (this->computeRayKeys(origin, new_end, *keyray)){
+// #ifdef _OPENMP
+//             #pragma omp critical (free_insert)
+// #endif
+//             {
+//               free_cells.insert(keyray->begin(), keyray->end());
+//             }
+//           }
         } // end if maxrange
       } else { // BBX was set
         // endpoint in bbx and not maxrange?
@@ -242,31 +243,31 @@ namespace octomap {
           new_end = origin + direction * (float) maxrange;
         }
 
-        // update freespace, break as soon as bbx limit is reached
-        if (this->computeRayKeys(origin, new_end, *keyray)){
-          for(KeyRay::iterator it=keyray->begin(); it != keyray->end(); it++) {
-            if (inBBX(*it)) {
-#ifdef _OPENMP
-              #pragma omp critical (free_insert)
-#endif
-              {
-                free_cells.insert(*it);
-              }
-            }
-            else break;
-          }
-        } // end if compute ray
+//         // update freespace, break as soon as bbx limit is reached
+//         if (this->computeRayKeys(origin, new_end, *keyray)){
+//           for(KeyRay::iterator it=keyray->begin(); it != keyray->end(); it++) {
+//             if (inBBX(*it)) {
+// #ifdef _OPENMP
+//               #pragma omp critical (free_insert)
+// #endif
+//               {
+//                 free_cells.insert(*it);
+//               }
+//             }
+//             else break;
+//           }
+//         } // end if compute ray
       } // end bbx case
     } // end for all points, end of parallel OMP loop
 
-    // prefer occupied cells over free ones (and make sets disjunct)
-    for(KeySet::iterator it = free_cells.begin(), end=free_cells.end(); it!= end; ){
-      if (occupied_cells.find(*it) != occupied_cells.end()){
-        it = free_cells.erase(it);
-      } else {
-        ++it;
-      }
-    }
+    // // prefer occupied cells over free ones (and make sets disjunct)
+    // for(KeySet::iterator it = free_cells.begin(), end=free_cells.end(); it!= end; ){
+    //   if (occupied_cells.find(*it) != occupied_cells.end()){
+    //     it = free_cells.erase(it);
+    //   } else {
+    //     ++it;
+    //   }
+    // }
   }
 
   template <class NODE>
