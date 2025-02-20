@@ -149,8 +149,8 @@ namespace octomap {
     this->origin = in_origin;
 
     // maximum size to prevent crashes on large maps: (should be checked in a better way than a constant)
-    bool showAll = (octree.size() < 5 * 1e6);
-    bool uses_origin = ( (origin.rot().x() != 0.) && (origin.rot().y() != 0.)
+    constexpr bool showAll = false;  // Disable to speed up 5x
+    const bool uses_origin = ( (origin.rot().x() != 0.) && (origin.rot().y() != 0.)
         && (origin.rot().z() != 0.) && (origin.rot().u() != 1.) );
 
     // walk the tree one to find the number of nodes in each category
