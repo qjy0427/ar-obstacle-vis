@@ -118,10 +118,6 @@ void updateOctomap(
     pcl::PointCloud<pcl::PointXYZ>& pcl_cloud,
     const nav_msgs::Odometry& sensor_pose,
     std::shared_ptr<octomap::OcTree>& octree) {
-      // 1. 将 sensor_msgs::PointCloud2 转换为 PCL 点云
-    // pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
-    // pcl::fromROSMsg(cloud_msg, pcl_cloud);
-    // remove nan pts
     std::vector<int> indices;
     pcl::removeNaNFromPointCloud(pcl_cloud, pcl_cloud, indices);
 
@@ -146,37 +142,10 @@ void updateOctomap(
         octomap_cloud.push_back(pcl_point.x, pcl_point.y, pcl_point.z);
     }
 
-    // 注意：insertPointCloud 会执行 ray casting, 因此一般不需要再手动调用 castRay
-    //      如果只想用点云末端更新, 可以先调用 octomap_cloud.filter(...) 过滤点云, 只保留需要的点
     octree->insertPointCloud(octomap_cloud, sensor_origin, -1.0, true, false);
-
-    // 5. (可选) 手动执行射线投射来更新空闲空间
-    //    如果需要显式地标记空闲空间，可以使用 computeRayKeys 或 castRay 进行射线投射。
-    //    只有在不使用 insertPointCloud 或者需要更精细地控制空闲空间更新时才需要这样做。
-    /*
-    for (const auto& pcl_point : pcl_cloud.points) {
-    octomap::point3d end_point(pcl_point.x, pcl_point.y, pcl_point.z);
-    octomap::KeyRay keyRay;
-    octree->computeRayKeys(sensor_origin, end_point, keyRay);
-    for (auto key : keyRay) {
-      octree->updateNode(key, false); // 标记为 free
-    }
-    }
-    */
 
     // 6. 更新 OctoMap 的内部节点
     octree->updateInnerOccupancy();
-
-    // std::cout << "octree->size(): " << octree->size() << "\n";
-
-    // if (octree->size() > 30000 && !written) {
-    //     octree->prune();
-    //     std::string path_to_write = "/home/jingye/Downloads/octomap.ot";
-    //     octree->write(path_to_write);
-    //     std::cout << "Written octomap to " << path_to_write << "\n";
-    //     written = true;
-    //     // exit(0);
-    // }
 }
 
 pcl::PointCloud<pcl::PointXYZ> DepthMap2PointCloud(const cv::Mat& depth_map)
@@ -233,10 +202,6 @@ void addPointClouds()
 
     // tf publisher
     tf::TransformBroadcaster br;
-
-    // Eigen::Quaterniond R_I_wrt_C = Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitZ()) *
-    //                                Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY()) *
-    //                                Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitX());
 
     Eigen::Matrix4d T_C_wrt_I = (Eigen::Matrix4d() <<
         0.000000, 0.139173, 0.990268, 0.031976,
@@ -383,7 +348,6 @@ void addPointClouds()
         // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
         //           << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " "
         //           << pose.pose.orientation.w << "\n";
-
 
         mutex_pose.unlock();
         // mutex_cloud.unlock();
