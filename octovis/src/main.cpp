@@ -227,8 +227,9 @@ void addPointClouds()
         const std::string time_str = depth_map_path.substr(depth_map_path.find_last_of('/') + 1, depth_map_path.find_last_of('.') - depth_map_path.find_last_of('/') - 1);
         const uint64_t time = std::stoull(time_str);
         depth_map_cache[time] = depth_map;
-        std::cout << "Loaded " << ++loaded_depth_map_count << " depth images\n";
+        std::cout << "\rLoaded " << ++loaded_depth_map_count << " depth images" << std::flush;
     }
+    std::cout << "\nFinished loading depth maps\n";
     */
 
     int sleep_usec = 1e3;
