@@ -232,7 +232,7 @@ void addPointClouds()
     std::cout << "\nFinished loading depth maps\n";
     */
 
-    int sleep_usec = 1e3;
+    int sleep_usec = 5e2;
     uint64_t last_time = 0;
     std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(voxel_size));
     gui->addOctree(octree.get(), 0);
@@ -260,12 +260,10 @@ void addPointClouds()
             printout_mode_toggled = true;
         }
 
-        tf::Transform transform;
-        auto& pos = pose.pose.pose.position;
-
-        auto& ori = pose.pose.pose.orientation;
-        // Eigen::Quaterniond q_eigen(ori.w, ori.x, ori.y, ori.z);
-        // q_eigen = q_eigen * R_I_wrt_C;
+        auto cam_pose = pose;  // Should be a copy to avoid retransform when reusing the same pose
+        mutex_pose.unlock();
+        auto& pos = cam_pose.pose.pose.position;
+        auto& ori = cam_pose.pose.pose.orientation;
         Eigen::Matrix4d T_I_wrt_W = Eigen::Matrix4d::Identity();
         T_I_wrt_W.block<3, 3>(0, 0) = Eigen::Quaterniond(ori.w, ori.x, ori.y, ori.z).toRotationMatrix();
         T_I_wrt_W.block<3, 1>(0, 3) = Eigen::Vector3d(pos.x, pos.y, pos.z);
@@ -335,7 +333,7 @@ void addPointClouds()
             // std::cout << (getTime() - start_time) * 1e3 << " ms (clear octomap time)\n";
 
             // start_time = getTime();
-            updateOctomap(point_cloud, pose, octree);
+            updateOctomap(point_cloud, cam_pose, octree);
             // std::cout << (getTime() - start_time) * 1e3 << " ms (update octomap time)\n";
 
             // start_time = getTime();
@@ -346,11 +344,11 @@ void addPointClouds()
 
         gui->m_glwidget->needs_repainting_ = true;
         emit gui->m_glwidget->resumeRequested();
-        // std::cout << "pose: " << pose.pose.position.x << " " << pose.pose.position.y << " " << pose.pose.position.z << " "
-        //           << pose.pose.orientation.x << " " << pose.pose.orientation.y << " " << pose.pose.orientation.z << " "
-        //           << pose.pose.orientation.w << "\n";
+        // std::cout << "pose: " << pose.pose.pose.position.x << " " << pose.pose.pose.position.y << " "
+        //           << pose.pose.pose.position.z << " " << pose.pose.pose.orientation.x << " "
+        //           << pose.pose.pose.orientation.y << " " << pose.pose.pose.orientation.z << " "
+        //           << pose.pose.pose.orientation.w << "\n";
 
-        mutex_pose.unlock();
         // mutex_cloud.unlock();
         // loop_rate.sleep();
         // sleep(1);
