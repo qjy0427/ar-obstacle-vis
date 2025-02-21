@@ -18,7 +18,8 @@
 #include "Octomap/OcTree.h"
 #include "octovis/ViewerGui.h"
 
-float voxel_size = 1.0;  // in meters
+float voxel_size = 2.0;  // in meters
+constexpr int kSleepUsec = 1e3;  // for usleep()
 std::mutex mutex_cloud, mutex_pose, mutex_image;
 sensor_msgs::PointCloud2 cloud;
 nav_msgs::Odometry pose;
@@ -232,7 +233,6 @@ void addPointClouds()
     std::cout << "\nFinished loading depth maps\n";
     */
 
-    int sleep_usec = 5e2;
     uint64_t last_time = 0;
     std::shared_ptr<octomap::OcTree> octree(new octomap::OcTree(voxel_size));
     gui->addOctree(octree.get(), 0);
@@ -244,7 +244,7 @@ void addPointClouds()
         if (last_time >= image_time)
         {
             mutex_pose.unlock();
-            usleep(sleep_usec);
+            usleep(kSleepUsec);
             continue;
         }
         last_time = image_time;
@@ -258,6 +258,7 @@ void addPointClouds()
         {
             gui->on_actionPrintout_mode_toggled(true);
             printout_mode_toggled = true;
+            gui->m_glwidget->setFPSIsDisplayed(true);
         }
 
         auto cam_pose = pose;  // Should be a copy to avoid retransform when reusing the same pose
@@ -304,8 +305,7 @@ void addPointClouds()
                 depth_map = imread(depth_map_path, cv::IMREAD_UNCHANGED);
                 if (depth_map.empty()) {
                     std::cerr << "Error loading depth image at " << depth_map_path << "\n";
-                    mutex_pose.unlock();
-                    usleep(sleep_usec);
+                    usleep(kSleepUsec);
                     continue;
                 }
             } else
@@ -319,7 +319,7 @@ void addPointClouds()
         emit gui->m_glwidget->pauseRequested();
         while (gui->m_glwidget->painting_) {
             // std::cout << "Waiting for painting to finish...\n";
-            usleep(1e3);
+            usleep(kSleepUsec);
         }
         const Eigen::Quaterniond octovis_cam_q = q_eigen * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
         gui->m_glwidget->camera()->setOrientation(
@@ -342,7 +342,6 @@ void addPointClouds()
         std::cout << (getTime() - start_time) * 1e3 << " ms (Octomap process time)---------------------------\n"
                   << i_frame << "========================\n";
 
-        gui->m_glwidget->needs_repainting_ = true;
         emit gui->m_glwidget->resumeRequested();
         // std::cout << "pose: " << pose.pose.pose.position.x << " " << pose.pose.pose.position.y << " "
         //           << pose.pose.pose.position.z << " " << pose.pose.pose.orientation.x << " "
@@ -352,7 +351,7 @@ void addPointClouds()
         // mutex_cloud.unlock();
         // loop_rate.sleep();
         // sleep(1);
-        usleep(sleep_usec);
+        usleep(kSleepUsec);
     }
 }
 
