@@ -503,6 +503,6 @@ namespace octomap {
 
 } // namespace
 
-#include "octomap/OccupancyOcTreeBase.hxx"
+#include "Octomap/OccupancyOcTreeBase.hxx"
 
 #endif

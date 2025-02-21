@@ -32,8 +32,8 @@
  */
 
 
-#include <octomap/AbstractOccupancyOcTree.h>
-#include <octomap/octomap_types.h>
+#include <Octomap/AbstractOccupancyOcTree.h>
+#include <Octomap/octomap_types.h>
 
 
 namespace octomap {

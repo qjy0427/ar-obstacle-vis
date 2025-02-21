@@ -13,6 +13,10 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# for local octo* includes having higher priority (may not function as expected)
+include_directories(${PROJECT_SOURCE_DIR}/../octomap/include)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
 ADD_SUBDIRECTORY( octomap )
 
 if(BUILD_OCTOVIS_SUBPROJECT)

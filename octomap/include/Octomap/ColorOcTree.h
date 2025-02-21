@@ -36,8 +36,8 @@
 
 
 #include <iostream>
-#include <octomap/OcTreeNode.h>
-#include <octomap/OccupancyOcTreeBase.h>
+#include <Octomap/OcTreeNode.h>
+#include <Octomap/OccupancyOcTreeBase.h>
 
 namespace octomap {
   

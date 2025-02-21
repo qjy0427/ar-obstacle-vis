@@ -36,7 +36,7 @@
 
 #include <vector>
 #include <list>
-#include <octomap/octomap_types.h>
+#include <Octomap/octomap_types.h>
 
 namespace octomap {
 

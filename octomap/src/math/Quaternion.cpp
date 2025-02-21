@@ -31,9 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <octomap/math/Vector3.h>
-#include <octomap/math/Quaternion.h>
-#include <octomap/math/Utils.h>
+#include <Octomap/math/Vector3.h>
+#include <Octomap/math/Quaternion.h>
+#include <Octomap/math/Utils.h>
 
 #include <cassert>
 #include <math.h>

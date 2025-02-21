@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string>
 
-#include <octomap/OcTree.h>
-#include <octomap/ColorOcTree.h>
-#include <octomap/OcTreeStamped.h>
-#include <octomap/math/Utils.h>
+#include <Octomap/OcTree.h>
+#include <Octomap/ColorOcTree.h>
+#include <Octomap/OcTreeStamped.h>
+#include <Octomap/math/Utils.h>
 #include "testing.h"
  
 using namespace std;

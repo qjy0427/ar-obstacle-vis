@@ -139,6 +139,8 @@ namespace octomap {
 
   void OcTreeDrawer::setOcTree(const AbstractOcTree& in_tree, const pose6d& in_origin, int map_id_) {
 
+std::cout << "setOcTree...\n";
+
     const OcTree& octree = (const OcTree&) in_tree;
     this->map_id = map_id_;
 

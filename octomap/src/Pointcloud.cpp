@@ -49,7 +49,7 @@
 #include <assert.h>
 #include <limits>
 
-#include <octomap/Pointcloud.h>
+#include <Octomap/Pointcloud.h>
 
 namespace octomap {
 

@@ -1,5 +1,5 @@
-#include <octomap/octomap.h>
-#include <octomap/ColorOcTree.h>
+#include <Octomap/octomap.h>
+#include <Octomap/ColorOcTree.h>
 #include "testing.h"
 
 using namespace std;

@@ -26,7 +26,7 @@
 #define OCTOVIS_COLOR_OCTREEDRAWER_H_
 
 #include <octovis/OcTreeDrawer.h>
-#include <octomap/ColorOcTree.h>
+#include <Octomap/ColorOcTree.h>
 
 namespace octomap {
 

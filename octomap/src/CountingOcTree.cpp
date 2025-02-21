@@ -32,7 +32,7 @@
  */
 
 #include <cassert>
-#include <octomap/CountingOcTree.h>
+#include <Octomap/CountingOcTree.h>
 
 namespace octomap {
 

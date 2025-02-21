@@ -36,8 +36,8 @@
 #include <iostream>
 #include <fstream>
 
-#include <octomap/octomap.h>
-#include <octomap/octomap_timing.h>
+#include <Octomap/octomap.h>
+#include <Octomap/octomap_timing.h>
 
 using namespace std;
 using namespace octomap;

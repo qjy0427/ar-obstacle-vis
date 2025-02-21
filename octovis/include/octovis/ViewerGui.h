@@ -46,8 +46,8 @@
 #include "ViewerSettingsPanelCamera.h"
 #include "ui_ViewerGui.h"
 
-#include <octomap/AbstractOcTree.h>
-#include <octomap/OcTreeBase.h>
+#include <Octomap/AbstractOcTree.h>
+#include <Octomap/OcTreeBase.h>
 #include <octovis/OcTreeRecord.h>
 
 namespace octomap {

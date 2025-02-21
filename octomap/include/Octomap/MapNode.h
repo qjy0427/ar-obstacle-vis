@@ -31,24 +31,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Octomap/OcTree.h>
+#ifndef OCTOMAP_MAP_NODE_H
+#define OCTOMAP_MAP_NODE_H
 
+
+#include <string>
+#include <Octomap/OcTree.h>
 
 namespace octomap {
 
-	OcTree::OcTree(double in_resolution)
-		: OccupancyOcTreeBase<OcTreeNode>(in_resolution) {
-		ocTreeMemberInit.ensureLinking();
-	}
+  template <class TREETYPE>
+    class MapNode {
+    
+  public:
+    MapNode();
+    MapNode(TREETYPE* node_map, pose6d origin);
+    MapNode(std::string filename, pose6d origin);
+    MapNode(const Pointcloud& cloud, pose6d origin);
+    ~MapNode();
 
-  OcTree::OcTree(std::string _filename)
-    : OccupancyOcTreeBase<OcTreeNode> (0.1)  { // resolution will be set according to tree file
-    readBinary(_filename);
-  }
+    typedef TREETYPE TreeType;
 
-  OcTree::StaticMemberInitializer OcTree::ocTreeMemberInit;
+    TREETYPE* getMap() { return  node_map; }
+    
+    void updateMap(const Pointcloud& cloud, point3d sensor_origin);
 
+    inline std::string getId() { return id; }
+    inline void setId(std::string newid) { id = newid; }
 
+    inline pose6d getOrigin() { return origin; }
 
+    // returns cloud of voxel centers in global reference frame
+    Pointcloud generatePointcloud();
+    bool writeMap(std::string filename);
 
-} // namespace
+  protected:
+    TREETYPE*    node_map;  // occupancy grid map
+    pose6d       origin;    // origin and orientation relative to parent
+    std::string  id;
+
+    void clear();
+    bool readMap(std::string filename);
+
+  };
+
+} // end namespace
+
+#include "Octomap/MapNode.hxx"
+
+#endif

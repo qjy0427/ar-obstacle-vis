@@ -31,9 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <octomap/AbstractOcTree.h>
-#include <octomap/OcTree.h>
-#include <octomap/ColorOcTree.h>
+#include <Octomap/AbstractOcTree.h>
+#include <Octomap/OcTree.h>
+#include <Octomap/ColorOcTree.h>
 #include <fstream>
 #include <iostream>
 #include <string.h>

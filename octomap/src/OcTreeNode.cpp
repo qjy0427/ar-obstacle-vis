@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#include <octomap/OcTreeNode.h>
+#include <Octomap/OcTreeNode.h>
 
 namespace octomap {
 

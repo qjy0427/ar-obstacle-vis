@@ -132,11 +132,17 @@ find_package(PCL 1.2 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 
 find_package(catkin REQUIRED COMPONENTS roscpp tf cv_bridge)
-include_directories(${catkin_INCLUDE_DIRS})
 
 # Now add these generated files to the ADD_EXECUTABLE step
 # If this is NOT done, then the ui_*.h files will not be generated
 add_executable(ar_obstacle_vis ${viewer_SRCS} ${viewer_UIS_H} ${viewer_MOC_SRCS} ${viewer_RES})
+
+target_include_directories(ar_obstacle_vis
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/../octomap/include
+        ${PROJECT_SOURCE_DIR}/include
+        ${catkin_INCLUDE_DIRS}
+)
 
 # Make it visible outside
 #message(viewer_UIS_H: ${viewer_UIS_H})

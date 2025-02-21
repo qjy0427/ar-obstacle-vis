@@ -15,7 +15,7 @@
 #include <QtGui>
 #include <QApplication>
 
-#include "octomap/OcTree.h"
+#include "Octomap/OcTree.h"
 #include "octovis/ViewerGui.h"
 
 float voxel_size = 1.0;  // in meters
@@ -341,7 +341,7 @@ void addPointClouds()
         }
         gui->showOcTree();
         std::cout << (getTime() - start_time) * 1e3 << " ms (Octomap process time)---------------------------\n"
-                                                       "========================\n";
+                  << i_frame << "========================\n";
 
         gui->m_glwidget->needs_repainting_ = true;
         emit gui->m_glwidget->resumeRequested();

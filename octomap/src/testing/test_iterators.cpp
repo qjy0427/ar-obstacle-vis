@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <octomap/octomap_timing.h>
-#include <octomap/octomap.h>
-#include <octomap/math/Utils.h>
+#include <Octomap/octomap_timing.h>
+#include <Octomap/octomap.h>
+#include <Octomap/math/Utils.h>
 #include "testing.h"
 
 using namespace std;

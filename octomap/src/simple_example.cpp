@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <octomap/octomap.h>
-#include <octomap/OcTree.h>
+#include <Octomap/octomap.h>
+#include <Octomap/OcTree.h>
 
 using namespace std;
 using namespace octomap;

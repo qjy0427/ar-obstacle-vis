@@ -32,9 +32,9 @@
  */
 
 
-#include <octomap/AbstractOcTree.h>
-#include <octomap/OcTree.h>
-#include <octomap/CountingOcTree.h>
+#include <Octomap/AbstractOcTree.h>
+#include <Octomap/OcTree.h>
+#include <Octomap/CountingOcTree.h>
 
 
 namespace octomap {

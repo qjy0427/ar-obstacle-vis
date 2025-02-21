@@ -171,7 +171,7 @@ namespace octomap {
                                                 double maxrange)
   {
 
-
+std::cout << "computeUpdate...\n";
 
 #ifdef _OPENMP
     omp_set_num_threads(this->keyrays.size());

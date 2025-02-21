@@ -35,8 +35,8 @@
 #define OCTOMAP_OCTREE_STAMPED_H
 
 
-#include <octomap/OcTreeNode.h>
-#include <octomap/OccupancyOcTreeBase.h>
+#include <Octomap/OcTreeNode.h>
+#include <Octomap/OccupancyOcTreeBase.h>
 #include <ctime>
 
 namespace octomap {

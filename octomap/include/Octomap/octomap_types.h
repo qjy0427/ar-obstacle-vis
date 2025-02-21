@@ -31,52 +31,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OCTOMAP_MAP_NODE_H
-#define OCTOMAP_MAP_NODE_H
+#ifndef OCTOMAP_TYPES_H
+#define OCTOMAP_TYPES_H
 
+#include <stdio.h>
+#include <vector>
+#include <list>
+#include <inttypes.h>
 
-#include <string>
-#include <octomap/OcTree.h>
+#include <Octomap/math/Vector3.h>
+#include <Octomap/math/Pose6D.h>
+#include <Octomap/octomap_deprecated.h>
 
 namespace octomap {
 
-  template <class TREETYPE>
-    class MapNode {
-    
-  public:
-    MapNode();
-    MapNode(TREETYPE* node_map, pose6d origin);
-    MapNode(std::string filename, pose6d origin);
-    MapNode(const Pointcloud& cloud, pose6d origin);
-    ~MapNode();
+  ///Use Vector3 (float precision) as a point3d in octomap
+  typedef octomath::Vector3               point3d;
+  /// Use our Pose6D (float precision) as pose6d in octomap
+  typedef octomath::Pose6D                pose6d;
 
-    typedef TREETYPE TreeType;
+  typedef std::vector<octomath::Vector3>  point3d_collection;
+  typedef std::list<octomath::Vector3>    point3d_list;
 
-    TREETYPE* getMap() { return  node_map; }
-    
-    void updateMap(const Pointcloud& cloud, point3d sensor_origin);
+  /// A voxel defined by its center point3d and its side length
+  typedef std::pair<point3d, double> OcTreeVolume;
 
-    inline std::string getId() { return id; }
-    inline void setId(std::string newid) { id = newid; }
+}
 
-    inline pose6d getOrigin() { return origin; }
+  // no debug output if not in debug mode:
+  #ifdef NDEBUG
+    #ifndef OCTOMAP_NODEBUGOUT
+      #define OCTOMAP_NODEBUGOUT
+    #endif
+  #endif
 
-    // returns cloud of voxel centers in global reference frame
-    Pointcloud generatePointcloud();
-    bool writeMap(std::string filename);
+  #ifdef OCTOMAP_NODEBUGOUT
+    #define OCTOMAP_DEBUG(...)       (void)0
+    #define OCTOMAP_DEBUG_STR(...)   (void)0
+  #else
+    #define OCTOMAP_DEBUG(...)        fprintf(stderr, __VA_ARGS__), fflush(stderr)
+    #define OCTOMAP_DEBUG_STR(args)   std::cerr << args << std::endl
+  #endif
 
-  protected:
-    TREETYPE*    node_map;  // occupancy grid map
-    pose6d       origin;    // origin and orientation relative to parent
-    std::string  id;
-
-    void clear();
-    bool readMap(std::string filename);
-
-  };
-
-} // end namespace
-
-#include "octomap/MapNode.hxx"
+  #define OCTOMAP_WARNING(...)      fprintf(stderr, "WARNING: "), fprintf(stderr, __VA_ARGS__), fflush(stderr)
+  #define OCTOMAP_WARNING_STR(args) std::cerr << "WARNING: " << args << std::endl
+  #define OCTOMAP_ERROR(...)        fprintf(stderr, "ERROR: "), fprintf(stderr, __VA_ARGS__), fflush(stderr)
+  #define OCTOMAP_ERROR_STR(args)   std::cerr << "ERROR: " << args << std::endl
 
 #endif

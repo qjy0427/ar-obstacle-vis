@@ -34,7 +34,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <octomap/octomap.h>
+#include <Octomap/octomap.h>
 #include <cstdlib>
 #include <cstring>
 

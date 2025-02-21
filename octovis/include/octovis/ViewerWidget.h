@@ -27,7 +27,7 @@
 
 #include "SceneObject.h"
 #include "SelectionBox.h"
-#include <octomap/octomap.h>
+#include <Octomap/octomap.h>
 #include <qglviewer.h>
 #include <opencv2/opencv.hpp>
 

@@ -1,5 +1,5 @@
 
-#include <octomap/octomap.h>
+#include <Octomap/octomap.h>
 #include "testing.h"
 
 using namespace std;

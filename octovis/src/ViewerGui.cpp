@@ -24,11 +24,11 @@
 
 #include <iostream>
 #include <fstream>
-//#include <octomap/octomap_timing.h>
+//#include <Octomap/octomap_timing.h>
 
 #include <octovis/ViewerGui.h>
 #include <octovis/ColorOcTreeDrawer.h>
-#include <octomap/MapCollection.h>
+#include <Octomap/MapCollection.h>
 //Dummy object definition to ensure VS2012 does not drop the StaticMemberInitializer, causing this tree failing to register.
 octomap::ColorOcTree colortreeTmp(0);
 

@@ -36,8 +36,8 @@
 #include <sstream>
 #include <stdlib.h>
 
-#include <octomap/math/Pose6D.h>
-#include <octomap/ScanGraph.h>
+#include <Octomap/math/Pose6D.h>
+#include <Octomap/ScanGraph.h>
 
 namespace octomap {
 
